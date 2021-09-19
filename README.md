@@ -1,7 +1,6 @@
 # vue-chrome-extension-yucheng
 
-基于 `vue-chrome-extension-boilerplate` 模板二次开发
-chrome extension 学习地址 `chrome-plugin-demo`
+基于 `vue-chrome-extension-boilerplate` 模板二次开发,chrome extension 学习仓库 `chrome-plugin-demo`
 
 ## Scripts
 
@@ -18,3 +17,10 @@ npm run build
 // lint all source files
 npm run lint
 ```
+
+完成功能
+
+- vue,vite,vuex,vuerouter,vue-cli 英文官网跳中文官网
+- mdn 优先中文，没有中文就是英文界面
+
+## bug 很多。。。
