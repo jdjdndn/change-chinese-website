@@ -1,0 +1,64 @@
+{
+  // vscode默认启用了根据文件类型自动设置tabsize的选项
+  "editor.detectIndentation": false,
+  // 重新设定tabsize
+  "editor.tabSize": 2,
+  // #每次保存的时候自动格式化
+  "editor.formatOnSave": true,
+  // 保存时自动格式化代码
+  // "javascript.format.semicolons": "remove",
+  "javascript.format.insertSpaceBeforeFunctionParenthesis": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true,
+    "source.fixAll.eslint": true
+  },
+  "eslint.alwaysShowStatus": true,
+  "eslint.validate": [
+    "javascriptreact",
+    "html",
+    {
+      "language": "javascript",
+      "autoFix": true
+    },
+    {
+      "language": "vue",
+      "autoFix": true
+    }
+  ],
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "auto-close-tag.activationOnLanguage": [
+    "xml",
+    "php",
+    "blade",
+    "ejs",
+    "jinja",
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "plaintext",
+    "markdown",
+    "vue",
+    "liquid",
+    "erb",
+    "lang-cfml",
+    "cfml",
+    "HTML (Eex)"
+  ],
+  "editor.fontSize": 18,
+  "workbench.iconTheme": "vscode-icons",
+  "editor.fontLigatures": true,
+  "editor.fontFamily": "Consolas, 'Courier New', monospace,\"萍方-简\"",
+  "vsicons.dontShowNewVersionMessage": true,
+  "files.autoSave": "onFocusChange",
+  "editor.semanticHighlighting.enabled": true,
+  "editor.tabCompletion": "onlySnippets",
+  "emmet.showSuggestionsAsSnippets": true,
+  "javascript.format.insertSpaceAfterConstructor": true,
+  "terminal.integrated.fontFamily": "‘JetBrains Mono’,Consolas, 'Courier New', monospace,\"萍方-简\"",
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "files.associations": {
+    "*.vue": "vue"
+  },
+  "workbench.colorTheme": "Monokai"
+}

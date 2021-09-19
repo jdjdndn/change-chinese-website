@@ -1,12 +1,7 @@
-<!--
- * @Author: yucheng
- * @Date: 2021-09-19 19:06:34
- * @LastEditTime: 2021-09-19 20:56:47
- * @LastEditors: yucheng
- * @Description:
--->
-
 # vue-chrome-extension-yucheng
+
+基于 `vue-chrome-extension-boilerplate` 模板二次开发
+chrome extension 学习地址 `chrome-plugin-demo`
 
 ## Scripts
 
