@@ -1,142 +1,141 @@
-const path = require('path')
-const webpack = require('webpack')
-const fg = require('fast-glob')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const ExtensionReloader = require('webpack-extension-reloader')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
-const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-
+const path = require("path");
+const webpack = require("webpack");
+const fg = require("fast-glob");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const ExtensionReloader = require("webpack-extension-reloader");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const VueLoaderPlugin = require("vue-loader/lib/plugin");
+const ScriptExtHtmlWebpackPlugin = require("script-ext-html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 // eslint-disable-next-line
 function configFunc(env, argv) {
-  const isDevMode = env.NODE_ENV === 'development'
+  const isDevMode = env.NODE_ENV === "development";
   const config = {
-    devtool: isDevMode ? 'eval-source-map' : false,
-    context: path.resolve(__dirname, './src'),
+    devtool: isDevMode ? "eval-source-map" : false,
+    context: path.resolve(__dirname, "./src"),
     entry: {
-      options: './options/index.js',
-      popup: './popup/index.js',
-      background: './background/index.js',
-      contentScripts: './contentScripts/index.js',
-      newtab: './newtab/index.js',
-      devtools: './devtools/index.js',
+      options: "./options/index.js",
+      popup: "./popup/index.js",
+      background: "./background/index.js",
+      contentScripts: "./contentScripts/index.js",
+      newtab: "./newtab/index.js",
+      devtools: "./devtools/index.js"
     },
     output: {
-      path: path.resolve(__dirname, './dist'),
-      publicPath: './',
-      filename: '[name].js',
+      path: path.resolve(__dirname, "./dist"),
+      publicPath: "./",
+      filename: "[name].js"
     },
     module: {
       rules: [
         {
           test: /\.vue$/,
-          loader: 'vue-loader',
+          loader: "vue-loader",
           options: {
-            extractCSS: !isDevMode,
-          },
+            extractCSS: !isDevMode
+          }
         },
         {
           test: /\.js$/,
-          loader: 'babel-loader',
-          exclude: /(node_modules|bower_components)/,
+          loader: "babel-loader",
+          exclude: /(node_modules|bower_components)/
         },
         {
           test: /\.scss$/,
           use: [
-            isDevMode ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
-            'css-loader',
-            'sass-loader',
-          ],
+            isDevMode ? "vue-style-loader" : MiniCssExtractPlugin.loader,
+            "css-loader",
+            "sass-loader"
+          ]
         },
         {
           test: /\.sass$/,
           use: [
-            isDevMode ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
-            'css-loader',
+            isDevMode ? "vue-style-loader" : MiniCssExtractPlugin.loader,
+            "css-loader",
             {
-              loader: 'sass-loader',
+              loader: "sass-loader",
               // eslint-disable-next-line
-              options: { implementation: require('sass') },
-            },
-          ],
+              options: { implementation: require("sass") }
+            }
+          ]
         },
         {
           test: /\.styl$/,
           use: [
-            isDevMode ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
-            'css-loader',
-            'stylus-loader',
-          ],
+            isDevMode ? "vue-style-loader" : MiniCssExtractPlugin.loader,
+            "css-loader",
+            "stylus-loader"
+          ]
         },
         {
           test: /\.css$/,
           use: [
-            isDevMode ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
-            'css-loader',
-          ],
+            isDevMode ? "vue-style-loader" : MiniCssExtractPlugin.loader,
+            "css-loader"
+          ]
         },
         {
           test: /\.(png|jpg|gif|svg)$/,
-          loader: 'file-loader',
+          loader: "file-loader",
           options: {
-            name: '[name].[ext]?[hash]',
-            esModule: false,
-          },
-        },
-      ],
+            name: "[name].[ext]?[hash]",
+            esModule: false
+          }
+        }
+      ]
     },
     resolve: {
       alias: {
-        vue$: 'vue/dist/vue.runtime.esm.js',
-        bulma$: 'bulma/css/bulma.css',
-      },
+        vue$: "vue/dist/vue.runtime.esm.js",
+        bulma$: "bulma/css/bulma.css"
+      }
       // extensions: ['.js'],
     },
     plugins: [
       new VueLoaderPlugin(),
       new CleanWebpackPlugin({
-        cleanStaleWebpackAssets: false,
+        cleanStaleWebpackAssets: false
       }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: 'assets', to: 'assets' },
-          { from: 'manifest.json', to: 'manifest.json', flatten: true },
-        ],
+          { from: "assets", to: "assets" },
+          { from: "manifest.json", to: "manifest.json", flatten: true }
+        ]
       }),
       new HtmlWebpackPlugin({
-        title: 'Options',
-        template: './index.html',
-        filename: 'options.html',
-        chunks: ['options'],
+        title: "Options",
+        template: "./index.html",
+        filename: "options.html",
+        chunks: ["options"]
       }),
       new HtmlWebpackPlugin({
-        title: 'Popup',
-        template: './index.html',
-        filename: 'popup.html',
-        chunks: ['popup'],
+        title: "Popup",
+        template: "./index.html",
+        filename: "popup.html",
+        chunks: ["popup"]
       }),
       new HtmlWebpackPlugin({
-        title: 'Newtab',
-        template: './index.html',
-        filename: 'newtab.html',
-        chunks: ['newtab'],
+        title: "Newtab",
+        template: "./index.html",
+        filename: "newtab.html",
+        chunks: ["newtab"]
       }),
       new HtmlWebpackPlugin({
-        title: 'Devtools',
-        template: './index.html',
-        filename: 'devtools.html',
-        chunks: ['devtools'],
+        title: "Devtools",
+        template: "./index.html",
+        filename: "devtools.html",
+        chunks: ["devtools"]
       }),
       new HtmlWebpackPlugin({
-        title: 'Background',
-        template: './index.html',
-        filename: 'background.html',
-        chunks: ['background'],
-      }),
-    ],
-  }
+        title: "Background",
+        template: "./index.html",
+        filename: "background.html",
+        chunks: ["background"]
+      })
+    ]
+  };
 
   /**
    * Adjust rendererConfig for production settings
@@ -145,20 +144,20 @@ function configFunc(env, argv) {
     config.plugins.push(
       new webpack.HotModuleReplacementPlugin(),
       new ExtensionReloader({
-        contentScript: 'contentScripts',
-        background: 'background',
-        extensionPage: 'popup',
-        options: 'options',
+        contentScript: "contentScripts",
+        background: "background",
+        extensionPage: "popup",
+        options: "options"
       })
-    )
+    );
   } else {
     config.plugins.push(
       new ScriptExtHtmlWebpackPlugin({
         async: [/runtime/],
-        defaultAttribute: 'defer',
+        defaultAttribute: "defer"
       }),
       new MiniCssExtractPlugin({
-        filename: '[name].css',
+        filename: "[name].css"
       })
       // new CopyWebpackPlugin({
       // patterns: [
@@ -167,9 +166,9 @@ function configFunc(env, argv) {
       //     to: path.join(__dirname, '../dist/data'),
       //   },
       // ]})
-    )
+    );
   }
-  return config
+  return config;
 }
 
-module.exports = configFunc
+module.exports = configFunc;
