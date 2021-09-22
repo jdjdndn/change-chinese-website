@@ -222,10 +222,10 @@ const list = {
   "jingyan.baidu.com": {
     callback: baidujingyan
   },
-  bilibili: {
+  "www.bilibili.com": {
     callback: bilibili
   },
-  it1352: {
+  "www.it1352.cn": {
     callback: it1352
   },
   ".alexa.cn": {
@@ -237,28 +237,28 @@ const list = {
   "www.xbiquge.la": {
     callback: biquge
   },
-  "4hu.tv": {
+  "www.4hu.tv": {
     callback: hu4tv
   },
-  "csdn.net": {
+  "www.csdn.net": {
     callback: csdn
   },
-  "youtube.com": {
+  "www.youtube.com": {
     callback: youtube
   },
-  "developer.mozilla.org": {
+  "www.developer.mozilla.org": {
     callback: mdn
   },
-  "github.com": {
+  "www.github.com": {
     callback: github
   },
-  "zhihu.com": {
+  "www.zhihu.com": {
     callback: zhihu
   },
-  "juejin.cn": {
+  "www.juejin.cn": {
     callback: juejin
   },
-  "lodash.com": {
+  "www.lodash.com": {
     callback: lodash
   },
   "webpack.js.org": {
@@ -274,7 +274,7 @@ const list = {
     moreCase: () =>
       !href.includes("cn.") && !vueAroundList.some(it => href.includes(it))
   },
-  "pornhub.com": {
+  "www.pornhub.com": {
     callback: pornhub
   },
   "www.yyyweb.com": {
@@ -282,9 +282,6 @@ const list = {
   }
 };
 
-if (!href.includes("pornhub")) {
-  clearInterval(timer);
-}
 let target = "target=";
 if (tiaozhuanFlag) {
   tiaozhuanFlag = false;
@@ -301,7 +298,20 @@ for (const k in list) {
     (host === k && list[k].moreCase && list[k].moreCase()) ||
     (host === k && !list[k].moreCase)
   ) {
-    list[k].callback(params);
+    // 观察器的配置（需要观察什么变动）
+    const config = { childList: true, subtree: true };
+
+    // 当观察到变动时执行的回调函数
+    const callback = function(mutationsList, observer) {
+      console.log("回调执行");
+      list[k].callback(params);
+    };
+
+    // 创建一个观察器实例并传入回调函数
+    const observer = new MutationObserver(callback);
+
+    // 以上述配置开始观察目标节点
+    observer.observe(document, config);
     break;
   }
 }
@@ -348,6 +358,7 @@ function jiaobenzhijia() {
   removeAllFunc("[class*=blank]");
   removeAllFunc("[class*=dxy]");
   removeAllFunc("[class*=lbd]");
+  removeAllFunc("[class*=google-]");
   removeFunc("#aswift_1");
   $$("#article>.clearfix")[0];
   removeFunc("#article>.clearfix>div");
@@ -396,7 +407,7 @@ function hu4tv() {
   const adList = ["midBox", "coupletLeft", "coupletRight", "listBox", "btmBox"];
   removeArrList(adList, "#");
   if (pathname !== "/") {
-    $$(".wrap")[0].remove();
+    $$(".wrap").length === 6 && $$(".wrap")[0].remove();
   }
   videoPlay();
 }
@@ -705,6 +716,13 @@ if (fanyiFlag) {
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   console.log(message, sender, sendResponse, "message,sender,sendResponse");
   sendResponse({ text: message + " world" });
+});
+
+// 页面离开事件
+window.addEventListener("beforeunload", function(event) {
+  // clearInterval(timer);
+  observer.disconnect();
+  // event.returnValue = "\o/";
 });
 
 setTimeout(function() {
