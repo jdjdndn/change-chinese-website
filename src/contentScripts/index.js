@@ -9,8 +9,9 @@ import "./index.scss";
 let performance_now = performance.now();
 const { location } = window;
 const { href, host, pathname, origin, search } = location;
-const vueAroundList = ["router", "vuex", "cli"];
-let timer = null;
+const vueAroundList = ["router.vuejs.org", "vuex.vuejs.org", "cli.vuejs.org"];
+let timer = null,
+  tiaozhuanFlag = true; // 跳转变量
 // 开始记录时间
 let start;
 function logInfo(msg, debug = true) {
@@ -95,9 +96,10 @@ function rmCommonAd() {
     return false;
   });
   iframes.forEach(el => (el.style.display = "none"));
-  // inform('AD Block has removed common ads.', true)
 }
 rmCommonAd();
+
+function noop() {}
 
 function $(domStr, dom = document) {
   return dom.querySelector(domStr);
@@ -179,6 +181,9 @@ function videoPlay() {
   }
 }
 
+// 遍历查元素内容是否一致
+function findInnerText(dom, text) {}
+
 // 跳转方法
 function gotoLink(href) {
   // 判断是否为网址，是网址可以直接跳转
@@ -191,9 +196,19 @@ function gotoLink(href) {
     a.href = hrefStr;
     a.click();
     a.remove();
+    tiaozhuanFlag = false;
   }
 }
-const params = { href, win, pathname, origin, search };
+const params = { href, win, pathname, origin, search, host };
+
+// 需要指定 跳转分隔符 的列表
+const goLinkList = {
+  "www.yyyweb.com": {
+    target: "target=",
+    callback: yyywebClick
+  }
+};
+
 const list = {
   "www.baidu.com": {
     callback: baidu
@@ -228,19 +243,19 @@ const list = {
   "csdn.net": {
     callback: csdn
   },
-  youtube: {
+  "youtube.com": {
     callback: youtube
   },
   "developer.mozilla.org": {
     callback: mdn
   },
-  github: {
+  "github.com": {
     callback: github
   },
-  zhihu: {
+  "zhihu.com": {
     callback: zhihu
   },
-  juejin: {
+  "juejin.cn": {
     callback: juejin
   },
   "lodash.com": {
@@ -259,27 +274,52 @@ const list = {
     moreCase: () =>
       !href.includes("cn.") && !vueAroundList.some(it => href.includes(it))
   },
-  "pronhub.com": {
-    callback: pronhub
+  "pornhub.com": {
+    callback: pornhub
+  },
+  "www.yyyweb.com": {
+    callback: yyyweb
   }
 };
 
-if (!href.includes("pronhub")) {
+if (!href.includes("pornhub")) {
   clearInterval(timer);
+}
+let target = "target=";
+if (tiaozhuanFlag) {
+  tiaozhuanFlag = false;
+  if (goLinkList[host] && goLinkList[host][target]) {
+    target = goLinkList[k][target];
+  }
+  tiaozhuan(target, (goLinkList[host] = noop));
 }
 
 for (const k in list) {
+  // console.log(origin, k, origin.includes(k), "看看走的是哪一个");
+
   if (
-    (origin.includes(k) && list[k].moreCase && list[k].moreCase()) ||
-    (origin.includes(k) && !list[k].moreCase)
+    (host === k && list[k].moreCase && list[k].moreCase()) ||
+    (host === k && !list[k].moreCase)
   ) {
     list[k].callback(params);
     break;
   }
 }
 
+// 前端里
+function yyyweb() {
+  const adClassList = ["google-auto-placed"];
+  removeArrList(adClassList, ".");
+  removeAllFunc("[class*=adsbygoogle]");
+}
+
+function yyywebClick() {
+  const adIdList = ["ad_position_box"];
+  removeArrList(adIdList, "#");
+}
+
 // 百度
-function baidu({ href, win }) {
+function baidu() {
   let results = [...$$("[id]")].filter(el => el.id.match(/^\d+$/));
   results.filter(el => $("[data-tuiguang]", el)).forEach(el => el.remove());
   results = results
@@ -293,7 +333,7 @@ function baidu({ href, win }) {
       .forEach(el => el.remove());
 }
 // 百度文库
-function wenku({ href, win }) {
+function wenku() {
   if ($(".read-all")) {
     $(".read-all").click();
     removeAllFunc("[class*=hx]");
@@ -303,7 +343,7 @@ function wenku({ href, win }) {
   removeFunc(".fengchaoad");
 }
 // 脚本之家
-function jiaobenzhijia({ href, win }) {
+function jiaobenzhijia() {
   removeAllFunc("[class*=logo]");
   removeAllFunc("[class*=blank]");
   removeAllFunc("[class*=dxy]");
@@ -314,37 +354,36 @@ function jiaobenzhijia({ href, win }) {
   removeAllFunc("#txtlink, .mainlr, .main-right, .topimg");
 }
 // 百度经验
-function baidujingyan({ href, win }) {
+function baidujingyan() {
   removeAllFunc(
     "#aside, #wgt-like, #fresh-share-exp-e, #wgt-exp-share, .task-panel-entrance"
   );
 }
 // 哔哩哔哩
-function bilibili({ href, win }) {
-  removeAllFunc(".banner-card");
-  removeAllFunc("[id*=Ad], [class*=activity]");
-  removeAllFunc(
-    "[id*=ad-], [id*=ad-], [class*=-ad], [class*=ad-], [id*=Ad], [id*=recommand]"
-  );
+function bilibili() {
+  // removeAllFunc("[id*=Ad], [class*=activity]");
+  // removeAllFunc(
+  //   "[id*=ad-], [id*=ad-], [class*=-ad], [class*=ad-], [id*=Ad], [id*=recommand]"
+  // );
   removeFunc(".extension");
   removeFunc("#bili_live>a");
   removeAllFunc(".banner-card.b-wrap");
 }
 // it屋
-function it1352({ href, win }) {
+function it1352() {
   removeAllFunc(".row.hidden-sm");
 }
 // 未知
-function alexacn({ href, win }) {
+function alexacn() {
   removeAllFunc("[class*=important]");
 }
 // 樱花动漫
-function yinghuadongman({ href, win }) {
+function yinghuadongman() {
   removeAllFunc("[id*=HM], #fix_bottom_dom");
   removeArrList(["HMRichBox", "fix_bottom_dom"], "#");
 }
 // 笔趣阁
-function biquge({ href, win }) {
+function biquge() {
   removeAllFunc("[id*=cs_]");
   removeAllFunc(".dahengfu");
   removeAllFunc(".box_con>table");
@@ -352,7 +391,7 @@ function biquge({ href, win }) {
   removeAllFunc("#content>p:last-child");
 }
 // 4hu
-function hu4tv({ href, win }) {
+function hu4tv() {
   // #midBox
   const adList = ["midBox", "coupletLeft", "coupletRight", "listBox", "btmBox"];
   removeArrList(adList, "#");
@@ -362,9 +401,9 @@ function hu4tv({ href, win }) {
   videoPlay();
 }
 // csdn
-function csdn({ href, win }) {}
+function csdn() {}
 // youtube
-function youtube({ href, win }) {
+function youtube() {
   const searchAdList = $$(
     "#primary>.ytd-two-column-search-results-renderer>#contents>ytd-item-section-renderer.ytd-section-list-renderer"
   );
@@ -428,7 +467,7 @@ function zhihu({ href, win }) {
     throlleRemove(adClassList, ".");
   });
 }
-function juejin({ href, win }) {}
+function juejin() {}
 function lodash({ href, win }) {
   const s = href.replace("lodash.com", "www.lodashjs.com");
   location.href = s;
@@ -439,135 +478,46 @@ function webpack({ href, win }) {
   const str = new URL(href);
   location.href = "https://webpack." + zhName + ".org" + str.pathname;
 }
-function vue({ href, win }) {
+function vue() {
   location.href = location.protocol + "//cn." + location.host;
 }
-function vite({ href, win }) {
+function vite() {
   location.href = "https://cn.vitejs.dev" + location.pathname;
 }
-function pronhub({ href, win }) {
+function pornhub() {
   removeFunc("#hd-rightColVideoPage");
   removeFunc("li.sniperModeEngaged.alpha");
+  // const hideClassList = ["sniperModeEngaged.alpha"];
+  // $(".mgp_preRollSkipButton").click();
+  // hideArrList(hideClassList, ".");
 }
-logInfo(href);
-function github({ href, win }) {}
+
+function github() {}
+//  https://product.pconline.com.cn/ class: fixLeftQRcode  id:xuanfu_wapper
 
 // 所有跳转方法
-function tiaozhuan() {
-  // zhihu
+function tiaozhuan(query, fn) {
   window.addEventListener("click", function(e) {
-    // e.preventDefault()
     let href = "";
     if (e.target.href) {
-      href = e.target.href.split("target=")[1];
+      href = e.target.href.split(query)[1];
     } else if (e.target.parentNode.href) {
-      href = e.target.parentNode.href.split("target=")[1];
+      href = e.target.parentNode.href.split(query)[1];
     }
+    fn();
     if (href) {
-      gotoLink(href);
-    }
-  });
-  // juejin
-  window.addEventListener("click", function(e) {
-    // e.preventDefault()
-    if (e.target.href) {
-      let href = e.target.href.split("target=")[1];
+      e.preventDefault();
       gotoLink(href);
     }
   });
 }
 
-const vueFlag = vueAroundList.some(it => origin.includes(it));
+const vueFlag = vueAroundList.some(it => host === it);
 if (vueFlag && !href.includes("/zh/")) {
   let s = location.origin + "/zh/" + location.pathname;
   location.href = s;
 }
 
-// if (location.host === 'tieba.baidu.com') {
-//   const content = $('#container>.content')
-//   if (content) {
-//     rmad = () =>
-//       $$('#j_p_postlist>.j_l_post[ad-dom-img]').forEach(el => el.remove())
-//     content.addEventListener('DOMSubtreeModified', rmad)
-//     rmad()
-//   }
-//   const pgpt = document.getElementById('pagelet_frs-list/pagelet/thread')
-//   if (pgpt) {
-//     rmad = () => {
-//       $$('.fengchao-wrap-feed').forEach(el => el.remove())
-//       Array.from(thread_list.children)
-//         .filter(
-//           el =>
-//             el.tagName === 'LI' &&
-//             typeof el.className === 'string' &&
-//             el.className.indexOf('j_thread_list') < 0
-//         )
-//         .forEach(el => el.remove())
-//     }
-//     pgpt.addEventListener('DOMSubtreeModified', () => {
-//       const thread_list = $('#thread_list')
-//       if (thread_list) {
-//         thread_list.addEventListener('DOMSubtreeModified', rmad)
-//         rmad()
-//       }
-//     })
-//     rmad()
-//   }
-// } else if (location.host === 'paste.ubuntu.com') {
-//   if (document.getElementById('id_syntax')) {
-//     const select_el = document.getElementById('id_syntax')
-//     const main_values = [
-//       'c',
-//       'cpp',
-//       'csharp',
-//       'css',
-//       'delphi',
-//       'fortran',
-//       'go',
-//       'groovy',
-//       'html',
-//       'java',
-//       'js',
-//       'json',
-//       'kotlin',
-//       'matlab',
-//       'objective-c',
-//       'objective-c++',
-//       'php',
-//       'python',
-//       'rb',
-//       'sql',
-//       'swift',
-//       'text',
-//       'vb.net',
-//     ]
-//     const less_options = [...select_el.children].filter(
-//       option => !main_values.includes(option.value)
-//     )
-//     less_options.forEach(e => (e.style.display = 'none'))
-//     const insert_p = document.createElement('p')
-//     insert_p.style =
-//       'display: flex; align-items: center; margin-left: 10px; min-width: max-content;'
-//     const checkbox = document.createElement('input')
-//     checkbox.name = 'concise'
-//     checkbox.type = 'checkbox'
-//     checkbox.checked = true
-//     const label = document.createElement('label')
-//     label.setAttribute('for', 'concise')
-//     label.innerText = 'show only mainstream programming languages'
-//     label.addEventListener('click', () => {
-//       console.warn('called')
-//       checkbox.checked = !checkbox.checked
-//       less_options.forEach(
-//         e => (e.style.display = checkbox.checked ? 'none' : '')
-//       )
-//     })
-//     insert_p.appendChild(checkbox)
-//     insert_p.appendChild(label)
-//     const table_el = $('#pasteform :first-child')
-//     table_el.parentElement.insertBefore(insert_p, table_el)
-//   }
-// }
 // 去除copy之后的尾巴
 document.addEventListener("copy", function(e) {
   e.preventDefault();
@@ -577,7 +527,7 @@ document.addEventListener("copy", function(e) {
 
 // 谷歌翻译
 // 不翻译的列表
-const noFanYiList = ["bilibili", "juejin", "zhihu", "csdn"];
+const noFanYiList = ["bilibili", "juejin", "zhihu", "csdn", "lanhu", "wiki"];
 const fanyiFlag = noFanYiList.every(item => !href.includes(item));
 function addNewElement(innerhtml, node, src) {
   const element = document.createElement(node);
