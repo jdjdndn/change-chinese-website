@@ -279,6 +279,9 @@ const list = {
   },
   "www.yyyweb.com": {
     callback: yyyweb
+  },
+  'yt5.tv': {
+    callback:yt5
   }
 };
 
@@ -316,6 +319,12 @@ for (const k in list) {
   }
 }
 
+// 樱桃
+function yt5() {
+  const adClassList=['v-footer','notice-container','page-promotion.noticeShow','page-promotion','download-tip','detail-share']
+  removeArrList(adClassList,'.')
+  videoPlay()
+}
 // 前端里
 function yyyweb() {
   const adClassList = ["google-auto-placed"];
@@ -415,17 +424,17 @@ function hu4tv() {
 function csdn() {}
 // youtube
 function youtube() {
-  const searchAdList = $$(
-    "#primary>.ytd-two-column-search-results-renderer>#contents>ytd-item-section-renderer.ytd-section-list-renderer"
-  );
-  if (searchAdList) {
-    searchAdList.forEach((item, i) => {
-      if (i > 2) return;
-      item.remove();
-    });
-  }
-  videoPlay();
-  removeAllFunc("[class*=ytp-ad-]");
+  // const searchAdList = $$(
+  //   "#primary>.ytd-two-column-search-results-renderer>#contents>ytd-item-section-renderer.ytd-section-list-renderer"
+  // );
+  // if (searchAdList) {
+  //   searchAdList.forEach((item, i) => {
+  //     if (i > 2 && i) return;
+  //     item.remove();
+  //   });
+  // }
+  // videoPlay();
+  // removeAllFunc("[class*=ytp-ad-]");
 }
 function mdn({ href, win }) {
   const window = win;
