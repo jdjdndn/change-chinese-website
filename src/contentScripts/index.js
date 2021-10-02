@@ -181,6 +181,29 @@ function videoPlay() {
   }
 }
 
+// 点击事件
+function proClick(str, options = {}, search = "aira-label") {
+  let dom = null;
+  const all = options.all || false;
+  const i = options.i || 0;
+  switch (search) {
+    case "aira-label":
+      dom = all ? $$(`[aria-label=${str}]`)[i] : $(`[aria-label=${str}]`);
+      break;
+    case "class":
+      dom = all ? $$(`.${str}`)[i] : $(`.${str}`);
+      break;
+    case "id":
+      dom = all ? $$(`.${str}`)[i] : $(`#${str}`);
+      break;
+    default:
+      dom = all ? $$(`[aria-label=${str}]`)[i] : $(`[aria-label=${str}]`);
+  }
+  if (dom) {
+    dom.click();
+  }
+}
+
 // 遍历查元素内容是否一致
 function findInnerText(dom, text) {}
 
@@ -280,8 +303,8 @@ const list = {
   "www.yyyweb.com": {
     callback: yyyweb
   },
-  'yt5.tv': {
-    callback:yt5
+  "yt5.tv": {
+    callback: yt5
   }
 };
 
@@ -321,9 +344,16 @@ for (const k in list) {
 
 // 樱桃
 function yt5() {
-  const adClassList=['v-footer','notice-container','page-promotion.noticeShow','page-promotion','download-tip','detail-share']
-  removeArrList(adClassList,'.')
-  videoPlay()
+  const adClassList = [
+    "v-footer",
+    "notice-container",
+    "page-promotion.noticeShow",
+    "page-promotion",
+    "download-tip",
+    "detail-share"
+  ];
+  removeArrList(adClassList, ".");
+  videoPlay();
 }
 // 前端里
 function yyyweb() {
@@ -388,6 +418,13 @@ function bilibili() {
   removeFunc(".extension");
   removeFunc("#bili_live>a");
   removeAllFunc(".banner-card.b-wrap");
+  if ($$(".bilibili-player-video-btn-speed-name").innerHTML === "1.5x") return;
+  proClick("倍速");
+  proClick(
+    "bilibili-player-video-btn-speed-menu-list",
+    { all: true, i: 1 },
+    "class"
+  );
 }
 // it屋
 function it1352() {
@@ -413,7 +450,15 @@ function biquge() {
 // 4hu
 function hu4tv() {
   // #midBox
-  const adList = ["midBox", "coupletLeft", "coupletRight", "listBox", "btmBox"];
+  const adList = [
+    "midBox",
+    "coupletLeft",
+    "coupletRight",
+    "listBox",
+    "btmBox",
+    "popBox",
+    "maskBox"
+  ];
   removeArrList(adList, "#");
   if (pathname !== "/") {
     $$(".wrap").length === 6 && $$(".wrap")[0].remove();
@@ -435,6 +480,11 @@ function youtube() {
   // }
   // videoPlay();
   // removeAllFunc("[class*=ytp-ad-]");
+  const skBtn = $(".ytp-ad-skip-button.ytp-button");
+  if (skBtn) {
+    console.log(skBtn.innerText, "text");
+    skBtn.click();
+  }
 }
 function mdn({ href, win }) {
   const window = win;
