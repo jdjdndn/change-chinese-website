@@ -204,19 +204,15 @@ function proClick(str, options = {}, search = "aira-label") {
   }
 }
 
-// 遍历查元素内容是否一致
-function findInnerText(dom, text) {}
-
 // 跳转方法
 function gotoLink(href) {
   // 判断是否为网址，是网址可以直接跳转
   const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/;
-  const hrefStr = decodeURIComponent(href);
-  if (hrefStr && reg.test(hrefStr)) {
+  if (href && reg.test(href)) {
     const a = document.createElement("a");
     a.target = "_blank";
     a.rel = "noopener noreferrer nofollow";
-    a.href = hrefStr;
+    a.href = href;
     a.click();
     a.remove();
     tiaozhuanFlag = false;
@@ -229,6 +225,14 @@ const goLinkList = {
   "www.yyyweb.com": {
     target: "target=",
     callback: yyywebClick
+  },
+  "www.jianshu.com": {
+    target: "url="
+  },
+  // 知乎专栏
+  "zhuanlan.zhihu.com": {
+    target: "target=",
+    target1: "?t=" // 优先级高于target
   }
 };
 
@@ -305,18 +309,32 @@ const list = {
   },
   "yt5.tv": {
     callback: yt5
+  },
+  "360yy.cn": {
+    callback: videoPlay
+  },
+  "www.douyin.com": {
+    callback: videoPlay
+  },
+  "www.tiktok.com": { callback: videoPlay },
+  "read.qidian.com": {
+    callback: qidian
+  },
+  "www.douyu.com": {
+    callback: douyu
   }
 };
 
 let target = "target=";
 if (tiaozhuanFlag) {
   tiaozhuanFlag = false;
-  if (goLinkList[host] && goLinkList[host][target]) {
-    target = goLinkList[k][target];
-  }
-  tiaozhuan(target, (goLinkList[host] = noop));
+  const target1 = goLinkList[host] && goLinkList[host].target1;
+  const target = (goLinkList[host] && goLinkList[host].target) || "target=";
+  const targetList = [target1, target];
+  tiaozhuan(targetList, (goLinkList[host] = noop));
 }
 
+clearInterval(start);
 for (const k in list) {
   // console.log(origin, k, origin.includes(k), "看看走的是哪一个");
 
@@ -340,6 +358,52 @@ for (const k in list) {
     observer.observe(document, config);
     break;
   }
+}
+
+// 斗鱼
+function douyu() {
+  const adClassList = [
+    "XinghaiAd",
+    "SvgaPlayerDom",
+    "Bottom-ad",
+    "layout-Player-title",
+    "layout-Player-toolbar",
+    "react-draggable"
+  ];
+  removeArrList(adClassList, ".");
+  proClick("wfs-2a8e83", {}, "class");
+}
+
+// 起点
+function qidian() {
+  const adIdList = [
+    "topGameOp",
+    "tr-banner",
+    "banner-two",
+    "banner3",
+    "j-topHeadBox",
+    "j_bodyRecWrap",
+    "page-ops",
+    "banner1",
+    "j_guideBtn"
+  ];
+  const adClassList = [
+    "game-link",
+    "focus-img.cf",
+    "top-bg-box",
+    "topics-list.mb40.cf",
+    "games-op-wrap",
+    "right-op-wrap.mb10",
+    "crumbs-nav.center990.top-op",
+    "fans-zone"
+  ];
+  removeArrList(adIdList, "#");
+  removeArrList(adClassList, ".");
+  window.addEventListener("keyup", function(e) {
+    if (e.keyCode === 13) {
+      proClick("j_chapterNext", {}, "id");
+    }
+  });
 }
 
 // 樱桃
@@ -425,6 +489,9 @@ function bilibili() {
     { all: true, i: 1 },
     "class"
   );
+  // start = setInterval(() => {
+  //   proClick("change-btn", {}, "class");
+  // }, 5000);
 }
 // it屋
 function it1352() {
@@ -469,22 +536,12 @@ function hu4tv() {
 function csdn() {}
 // youtube
 function youtube() {
-  // const searchAdList = $$(
-  //   "#primary>.ytd-two-column-search-results-renderer>#contents>ytd-item-section-renderer.ytd-section-list-renderer"
-  // );
-  // if (searchAdList) {
-  //   searchAdList.forEach((item, i) => {
-  //     if (i > 2 && i) return;
-  //     item.remove();
-  //   });
+  // const skBtn = $(".ytp-ad-skip-button.ytp-button");
+  // if (skBtn) {
+  //   console.log(skBtn.innerText, "text");
+  //   skBtn.click();
   // }
-  // videoPlay();
-  // removeAllFunc("[class*=ytp-ad-]");
-  const skBtn = $(".ytp-ad-skip-button.ytp-button");
-  if (skBtn) {
-    console.log(skBtn.innerText, "text");
-    skBtn.click();
-  }
+  videoPlay();
 }
 function mdn({ href, win }) {
   const window = win;
@@ -557,6 +614,8 @@ function vite() {
 function pornhub() {
   removeFunc("#hd-rightColVideoPage");
   removeFunc("li.sniperModeEngaged.alpha");
+  const adIdList = ["pb_content", "pb_top_bar"];
+  removeArrList(adIdList, "#");
   // const hideClassList = ["sniperModeEngaged.alpha"];
   // $(".mgp_preRollSkipButton").click();
   // hideArrList(hideClassList, ".");
@@ -566,18 +625,24 @@ function github() {}
 //  https://product.pconline.com.cn/ class: fixLeftQRcode  id:xuanfu_wapper
 
 // 所有跳转方法
-function tiaozhuan(query, fn) {
+function tiaozhuan(queryList, fn) {
   window.addEventListener("click", function(e) {
-    let href = "";
+    let href = "",
+      query = "";
     if (e.target.href) {
-      href = e.target.href.split(query)[1];
+      href = e.target.href;
     } else if (e.target.parentNode.href) {
-      href = e.target.parentNode.href.split(query)[1];
+      href = e.target.parentNode.href;
     }
+    const hrefStr = decodeURIComponent(href);
+    const splitStr = queryList.find(item => {
+      return hrefStr.includes(item);
+    });
+    query = hrefStr.split(splitStr)[1];
     fn();
-    if (href) {
+    if (query) {
       e.preventDefault();
-      gotoLink(href);
+      gotoLink(query);
     }
   });
 }
