@@ -9,14 +9,29 @@ import "./index.scss";
 let performance_now = performance.now();
 const { location } = window;
 const { href, host, pathname, origin, search } = location;
+const { log, error, dir } = console;
 const vueAroundList = ["router.vuejs.org", "vuex.vuejs.org", "cli.vuejs.org"];
 let timer = null,
   tiaozhuanFlag = true; // 跳转变量
 // 开始记录时间
 let start;
-function logInfo(msg, debug = true) {
-  if (debug)
-    console.log(`%c${msg}`, "background-color: yellow; font-size: 16px;");
+function logInfo(...msg) {
+  msg.forEach(item => {
+    switch (typeof item) {
+      case "object":
+        log(`%o${item}`, "background-color: yellow; font-size: 16px;");
+        break;
+      case "boolean":
+        log(item);
+        break;
+      case "string":
+        log(`%c${item}`, "background-color: yellow; font-size: 16px;");
+        break;
+      case "number":
+        log(`%d${item}`, "background-color: yellow; font-size: 16px;");
+        break;
+    }
+  });
 }
 let win = "";
 if (window.top) {
@@ -172,12 +187,15 @@ function throttle(fun, delay) {
 
 // 视频播放
 function videoPlay() {
+  // if (start) return false;
+  logInfo("视频加速");
   const video = $("video");
   if (video) {
     if (video.paused) {
       video.play();
     }
     video.playbackRate = 1.5;
+    // start = true;
   }
 }
 
@@ -219,22 +237,6 @@ function gotoLink(href) {
   }
 }
 const params = { href, win, pathname, origin, search, host };
-
-// 需要指定 跳转分隔符 的列表
-const goLinkList = {
-  "www.yyyweb.com": {
-    target: "target=",
-    callback: yyywebClick
-  },
-  "www.jianshu.com": {
-    target: "url="
-  },
-  // 知乎专栏
-  "zhuanlan.zhihu.com": {
-    target: "target=",
-    target1: "?t=" // 优先级高于target
-  }
-};
 
 const list = {
   "www.baidu.com": {
@@ -325,16 +327,7 @@ const list = {
   }
 };
 
-let target = "target=";
-if (tiaozhuanFlag) {
-  tiaozhuanFlag = false;
-  const target1 = goLinkList[host] && goLinkList[host].target1;
-  const target = (goLinkList[host] && goLinkList[host].target) || "target=";
-  const targetList = [target1, target];
-  tiaozhuan(targetList, (goLinkList[host] = noop));
-}
-
-clearInterval(start);
+clearInterval(timer);
 for (const k in list) {
   // console.log(origin, k, origin.includes(k), "看看走的是哪一个");
 
@@ -342,19 +335,12 @@ for (const k in list) {
     (host === k && list[k].moreCase && list[k].moreCase()) ||
     (host === k && !list[k].moreCase)
   ) {
-    // 观察器的配置（需要观察什么变动）
     const config = { childList: true, subtree: true };
-
-    // 当观察到变动时执行的回调函数
     const callback = function(mutationsList, observer) {
       console.log("回调执行");
       list[k].callback(params);
     };
-
-    // 创建一个观察器实例并传入回调函数
     const observer = new MutationObserver(callback);
-
-    // 以上述配置开始观察目标节点
     observer.observe(document, config);
     break;
   }
@@ -853,4 +839,81 @@ setTimeout(function() {
   let performance_end = performance.now();
   const time = performance_end - performance_now;
   logInfo("加载时间" + "===>" + time);
+}, 0);
+
+setTimeout(function() {
+  let odiv = null,
+    flag = false,
+    domStrList = [];
+  const divInner = `
+  <div class='remove-ad-box'>
+  </div>
+  `;
+  odiv = document.createElement("div");
+  odiv.innerHTML = divInner;
+  document.body.appendChild(odiv);
+  function removeAd(e) {
+    const target = e.target;
+    const targetList = Array.from(e.target.classList);
+    if (targetList.includes("remove-ad-box") || target.nodeName === "BODY")
+      return;
+    e.preventDefault();
+    let domStr = "";
+    if (targetList.length > 0) {
+      domStr = "." + targetList.join(".");
+    } else if (target.id) {
+      domStr = "#" + target.id;
+    } else {
+      const parent = target.parentNode;
+      const parentClassList = Array.from(parent.classList);
+      if (parentClassList.length > 0) {
+        domStr =
+          "." + parentClassList.join(".") + ">" + target.nodeName.toLowerCase();
+      } else {
+        domStr = "#" + target.id + ">" + target.nodeName.toLowerCase();
+      }
+    }
+    try {
+      domStrList.push(domStr);
+      log(domStrList, "domStrList");
+      const dom = document.querySelector(domStr);
+      dom.remove();
+    } catch (error) {}
+  }
+  odiv.addEventListener("click", function(e) {
+    flag = !flag;
+    if (flag) {
+      odiv.classList.add("remove-ad-box-red");
+      window.addEventListener("click", removeAd);
+    } else {
+      odiv.classList.remove("remove-ad-box-red");
+      window.removeEventListener("click", removeAd);
+    }
+  });
+}, 0);
+
+setTimeout(function() {
+  // 需要指定 跳转分隔符 的列表
+  const goLinkList = {
+    "www.yyyweb.com": {
+      callback: yyywebClick
+    },
+    "www.jianshu.com": {
+      target: ["url="]
+    },
+    // 知乎专栏
+    "zhuanlan.zhihu.com": {
+      target: ["?t="] // 优先级高于target
+    }
+  };
+
+  if (tiaozhuanFlag) {
+    tiaozhuanFlag = false;
+    const targetList = [];
+    if (goLinkList[host] && goLinkList[host].target) {
+      targetList.concat(goLinkList[host].target);
+    }
+    targetList.push("target=");
+    tiaozhuan(targetList, (goLinkList[host] = noop));
+  }
 }, 0);

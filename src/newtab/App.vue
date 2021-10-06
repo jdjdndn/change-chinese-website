@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-09-15 17:11:16
+ * @LastEditTime: 2021-10-05 07:28:27
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -9,132 +9,162 @@
   <div class="newtab">
     <h1>{{ msg }}</h1>
     <div class="content-wrap">
-      <div v-for="(item,i) in list" :key="i" class="content-item">
+      <div
+        v-for="(item, i) in list"
+        :key="i"
+        class="content-item"
+      >
         <div class="icon">
-          <img :src="item.icon || '../assets/icons/icon_64.png'" alt />
+          <img
+            :src="item.icon || '../assets/icons/icon_64.png'"
+            alt
+          >
           <i @click="remove(i)">×</i>
         </div>
-        <a :href="item.href" @click="clickA(item,$event,i)">{{ item.name }}</a>
+        <a
+          :href="item.href"
+          @click="clickA(item, $event, i)"
+        >{{
+          item.name
+        }}</a>
       </div>
     </div>
-    <button @click="handlerClick">添加表单</button>
-    <div v-show="show" class="form">
+    <button @click="handlerClick">
+      添加表单
+    </button>
+    <div
+      v-show="show"
+      class="form"
+    >
       <div class="form-item">
         <span>icon:</span>
-        <input v-model="formData.icon" type="text" />
+        <input
+          v-model="formData.icon"
+          type="text"
+        >
       </div>
       <div class="form-item">
         <span>name:</span>
-        <input v-model="formData.name" type="text" />
+        <input
+          v-model="formData.name"
+          type="text"
+        >
       </div>
       <div class="form-item">
         <span>href:</span>
-        <input v-model="formData.href" type="text" />
+        <input
+          v-model="formData.href"
+          type="text"
+        >
       </div>
       <div class="form-item">
-        <button @click="cancel">取消</button>
-        <button @click="confirm">确定</button>
+        <button @click="cancel">
+          取消
+        </button>
+        <button @click="confirm">
+          确定
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import config from './config'
+import config from "./config";
 
 export default {
-  data () {
+  data() {
     return {
-      msg: '欢迎来到我的页面，我是靓仔',
+      msg: "欢迎来到我的页面，我是靓仔",
       list: [],
       show: false,
       formData: {
-        icon: '',
+        icon: "",
         name: "",
         href: ""
       }
-    }
+    };
   },
-  created () {
-    console.log(chrome, 'newTab');
-    this.getCurrentTabId()
-    this.init()
+  created() {
+    console.log(chrome, "newTab");
+    this.getCurrentTabId();
+    this.init();
   },
   methods: {
     // 获取当前选项卡ID
-    getCurrentTabId (callback) {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        console.log(tabs, 'tabs');
+    getCurrentTabId(callback) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        console.log(tabs, "tabs");
         if (callback) callback(tabs.length ? tabs[0].id : null);
       });
     },
-    clickA (item, e, i) {
+    clickA(item, e, i) {
       e.preventDefault();
       if (item.index <= 0 || !item.index) {
-        this.list[i].index = 1
+        this.list[i].index = 1;
       } else {
         // eslint-disable-next-line no-plusplus
-        this.list[i].index++
+        this.list[i].index++;
       }
-      this.setData(this.list)
-      this.init()
+      this.setData(this.list);
+      this.init();
       // eslint-disable-next-line no-restricted-globals
-      location.href = item.href
+      location.href = item.href;
     },
     // 初始化获取数据
-    init () {
-      const that = this
-      chrome.storage.sync.get(['linkList'], function (result) {
+    init() {
+      const that = this;
+      chrome.storage.sync.get(["linkList"], function(result) {
         if (!result.linkList) {
-          that.list = config.list
-          return true
+          that.list = config.list;
+          return true;
         }
         that.list = result.linkList.sort((a, b) => {
           if (!a.index) {
-            a.index = 1
+            a.index = 1;
           }
           if (!b.index) {
-            b.index = 1
+            b.index = 1;
           }
-          return b.index - a.index
-        })
+          return b.index - a.index;
+        });
       });
     },
     // 打开添加表单
-    handlerClick () {
-      this.show = true
+    handlerClick() {
+      this.show = true;
     },
     // 取消
-    cancel () {
-      this.show = false
+    cancel() {
+      this.show = false;
     },
     // 确定
-    confirm () {
-      this.list.push(this.formData)
-      this.setData(this.list, true)
-      this.cancel()
+    confirm() {
+      this.list.push(this.formData);
+      this.setData(this.list, true);
+      this.cancel();
     },
     // 设置数据
-    setData (list, clearForm = false) {
-      const that = this
-      chrome.storage.sync.set({ linkList: list }, function () {
-        that.init.call(that)
+    setData(list, clearForm = false) {
+      const that = this;
+      chrome.storage.sync.set({ linkList: list }, function() {
+        that.init.call(that);
         if (clearForm) {
           that.formData = {
-            icon: '',
+            icon: "",
             name: "",
             href: ""
-          }
+          };
         }
       });
     },
     // 删除
-    remove (i) {
-      const list = this.list.filter((item, index) => index !== i)
-      this.setData(list)
+    remove(i) {
+      const list = this.list.filter((item, index) => index !== i);
+      this.setData(list);
     }
   }
-}
+};
 </script>
 
 <style lang="scss">
@@ -187,7 +217,7 @@ $height: 80px;
         text-decoration: none;
         font-size: 12px;
         &:before {
-          content: '';
+          content: "";
           position: absolute;
           width: $width;
           height: $height;

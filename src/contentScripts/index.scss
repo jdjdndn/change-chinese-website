@@ -1,1 +1,23 @@
-
+.remove-ad-box {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: green;
+  border: 1px solid #ccc;
+  z-index: 9999;
+  cursor: pointer;
+  font-size: 12px;
+  word-wrap: break-word;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.remove-ad-box-red {
+  .remove-ad-box {
+    background-color: red;
+  }
+}

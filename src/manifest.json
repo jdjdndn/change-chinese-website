@@ -51,7 +51,8 @@
     "http://*/*",
     "https://*/*",
     "fontSettings",
-    "<all_urls>"
+    "<all_urls>",
+    "bookmarks"
   ],
   "version": "1.0.0",
   "web_accessible_resources": [
