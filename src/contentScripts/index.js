@@ -275,7 +275,7 @@ const list = {
   "www.youtube.com": {
     callback: youtube
   },
-  "www.developer.mozilla.org": {
+  "developer.mozilla.org": {
     callback: mdn
   },
   "www.github.com": {
@@ -337,7 +337,7 @@ for (const k in list) {
   ) {
     const config = { childList: true, subtree: true };
     const callback = function(mutationsList, observer) {
-      console.log("回调执行");
+    //   console.log("回调执行");
       list[k].callback(params);
     };
     const observer = new MutationObserver(callback);
@@ -354,8 +354,12 @@ function douyu() {
     "Bottom-ad",
     "layout-Player-title",
     "layout-Player-toolbar",
-    "react-draggable"
+    "react-draggable",
+    'SignBaseComponent-sign-ad',
+    'HeaderGif-right',
+    'HeaderGif-left'
   ];
+  setStyle('video', 'z-index: 9999')
   removeArrList(adClassList, ".");
   proClick("wfs-2a8e83", {}, "class");
 }
@@ -501,7 +505,8 @@ function biquge() {
   removeAllFunc("#content>p:last-child");
 }
 // 4hu
-function hu4tv() {
+function hu4tv () {
+  setStyle('body','overflow:auto')
   // #midBox
   const adList = [
     "midBox",
@@ -659,7 +664,7 @@ function addNewElement(innerhtml, node, src) {
   }
   document.getElementsByTagName("head")[0].appendChild(element);
 }
-if (fanyiFlag) {
+// if (fanyiFlag) {
   // 隐藏顶部栏
   const { head } = document;
   const style = document.createElement("style");
@@ -804,24 +809,24 @@ if (fanyiFlag) {
   );
 
   // 翻译按钮
-  (function ziDongFanYi() {
-    const d = $("#google_translate_element");
-    if (d) {
-      // 选择语言的弹出盒子
-      const iframe = $(".goog-te-menu-frame.skiptranslate");
-      if (!iframe) return;
-      if (d.innerText.includes("中文")) return;
-      const zhBtn = iframe.contentWindow.document
-        .getElementById(":1.menuBody")
-        .querySelectorAll("a");
-      Array.from(zhBtn).forEach(item => {
-        if (item.innerHTML.includes("简体")) {
-          item.click();
-        }
-      });
-    }
-  })();
-}
+  // (function ziDongFanYi() {
+  //   const d = $("#google_translate_element");
+  //   if (d) {
+  //     // 选择语言的弹出盒子
+  //     const iframe = $(".goog-te-menu-frame.skiptranslate");
+  //     if (!iframe) return;
+  //     if (d.innerText.includes("中文")) return;
+  //     const zhBtn = iframe.contentWindow.document
+  //       .getElementById(":1.menuBody")
+  //       .querySelectorAll("a");
+  //     Array.from(zhBtn).forEach(item => {
+  //       if (item.innerHTML.includes("简体")) {
+  //         item.click();
+  //       }
+  //     });
+  //   }
+  // })();
+// }
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   console.log(message, sender, sendResponse, "message,sender,sendResponse");
