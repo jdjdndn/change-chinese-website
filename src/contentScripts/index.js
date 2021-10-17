@@ -154,6 +154,7 @@ function removeFunc(dom) {
 }
 // 遍历数组移除单个 类名或者id 元素
 function removeArrList(classList, badge) {
+  if (!classList) return false;
   classList.forEach(item => {
     const itemStr = badge + item;
     const dom = $(itemStr);
@@ -215,8 +216,8 @@ function videoPlay() {
 }
 
 // location.href改变网址
-function changeHref(origin, pathname, type = 'https') {
-  location.href = origin + pathname
+function changeHref(origin, pathname, type = "https") {
+  location.href = origin + pathname;
 }
 
 // 点击事件
@@ -294,7 +295,16 @@ const list = {
     callback: biquge
   },
   "www.4hu.tv": {
-    callback: hu4tv
+    callback: hu4tv,
+    adIdList: [
+      "midBox",
+      "coupletLeft",
+      "coupletRight",
+      "listBox",
+      "btmBox",
+      "popBox",
+      "maskBox"
+    ]
   },
   "www.csdn.net": {
     callback: csdn
@@ -321,14 +331,10 @@ const list = {
     callback: webpack
   },
   "vuejs.org": {
-    callback: vue,
-    moreCase: () =>
-      !href.includes("cn.") && !vueAroundList.some(it => href.includes(it))
+    callback: vue
   },
   "vitejs.dev": {
-    callback: vite,
-    moreCase: () =>
-      !href.includes("cn.") && !vueAroundList.some(it => href.includes(it))
+    callback: vite
   },
   "www.pornhub.com": {
     callback: pornhub
@@ -337,7 +343,15 @@ const list = {
     callback: yyyweb
   },
   "yt5.tv": {
-    callback: yt5
+    callback: yt5,
+    adClassList: [
+      "v-footer",
+      "notice-container",
+      "page-promotion.noticeShow",
+      "page-promotion",
+      "download-tip",
+      "detail-share"
+    ]
   },
   "360yy.cn": {
     callback: videoPlay
@@ -349,21 +363,60 @@ const list = {
     callback: videoPlay
   },
   "read.qidian.com": {
-    callback: qidian
+    callback: qidian,
+    adIdList: [
+      "topGameOp",
+      "tr-banner",
+      "banner-two",
+      "banner3",
+      "j-topHeadBox",
+      "j_bodyRecWrap",
+      "page-ops",
+      "banner1",
+      "j_guideBtn",
+      "page-ops"
+    ],
+    adClassList: [
+      "game-link",
+      "focus-img.cf",
+      "top-bg-box",
+      "topics-list.mb40.cf",
+      "games-op-wrap",
+      "right-op-wrap.mb10",
+      "crumbs-nav.center990.top-op",
+      "fans-zone"
+    ]
   },
   "www.douyu.com": {
-    callback: douyu
+    callback: douyu,
+    adClassList: [
+      "XinghaiAd",
+      "SvgaPlayerDom",
+      "Bottom-ad",
+      "layout-Player-title",
+      "layout-Player-toolbar",
+      "react-draggable",
+      "SignBaseComponent-sign-ad",
+      "HeaderGif-right",
+      "HeaderGif-left"
+    ]
+  },
+  "www.jianshu.com": {
+    target: ["url="]
+  },
+  // 知乎专栏
+  "zhuanlan.zhihu.com": {
+    target: ["?t="] // 优先级高于target
   }
 };
 
 clearInterval(timer);
 for (const k in list) {
   // console.log(origin, k, origin.includes(k), "看看走的是哪一个");
+  removeArrList(list[k].adClassList, ".");
+  removeArrList(list[k].adIdList, "#");
 
-  if (
-    (host === k && list[k].moreCase && list[k].moreCase()) ||
-    (host === k && !list[k].moreCase)
-  ) {
+  if (host === k && list[k].callback) {
     const config = {
       childList: true,
       subtree: true
@@ -380,65 +433,15 @@ for (const k in list) {
 
 // 斗鱼
 function douyu() {
-  const adClassList = [
-    "XinghaiAd",
-    "SvgaPlayerDom",
-    "Bottom-ad",
-    "layout-Player-title",
-    "layout-Player-toolbar",
-    "react-draggable",
-    'SignBaseComponent-sign-ad',
-    'HeaderGif-right',
-    'HeaderGif-left'
-  ];
-  setStyle('video', 'z-index: 9999')
-  removeArrList(adClassList, ".");
+  setStyle("video", "z-index: 9999");
   proClick("wfs-2a8e83", {}, "class");
 }
 
 // 起点
-function qidian() {
-  const adIdList = [
-    "topGameOp",
-    "tr-banner",
-    "banner-two",
-    "banner3",
-    "j-topHeadBox",
-    "j_bodyRecWrap",
-    "page-ops",
-    "banner1",
-    "j_guideBtn"
-  ];
-  const adClassList = [
-    "game-link",
-    "focus-img.cf",
-    "top-bg-box",
-    "topics-list.mb40.cf",
-    "games-op-wrap",
-    "right-op-wrap.mb10",
-    "crumbs-nav.center990.top-op",
-    "fans-zone"
-  ];
-  removeArrList(adIdList, "#");
-  removeArrList(adClassList, ".");
-  window.addEventListener("keyup", function (e) {
-    if (e.keyCode === 13) {
-      proClick("j_chapterNext", {}, "id");
-    }
-  });
-}
+function qidian() {}
 
 // 樱桃
 function yt5() {
-  const adClassList = [
-    "v-footer",
-    "notice-container",
-    "page-promotion.noticeShow",
-    "page-promotion",
-    "download-tip",
-    "detail-share"
-  ];
-  removeArrList(adClassList, ".");
   videoPlay();
 }
 // 前端里
@@ -540,18 +543,18 @@ function biquge() {
 }
 // 4hu
 function hu4tv() {
-  setStyle('body', 'overflow:auto')
+  setStyle("body", "overflow:auto");
   // #midBox
-  const adList = [
-    "midBox",
-    "coupletLeft",
-    "coupletRight",
-    "listBox",
-    "btmBox",
-    "popBox",
-    "maskBox"
-  ];
-  removeArrList(adList, "#");
+  // const adList = [
+  //   "midBox",
+  //   "coupletLeft",
+  //   "coupletRight",
+  //   "listBox",
+  //   "btmBox",
+  //   "popBox",
+  //   "maskBox"
+  // ];
+  // removeArrList(adList, "#");
   if (pathname !== "/") {
     $$(".wrap").length === 6 && $$(".wrap")[0].remove();
   }
@@ -670,7 +673,7 @@ function github() {}
 //  https://product.pconline.com.cn/ class: fixLeftQRcode  id:xuanfu_wapper
 
 // 所有跳转方法
-function tiaozhuan(queryList, fn) {
+function tiaozhuan(queryList) {
   window.addEventListener("click", function (e) {
     let href = "",
       query = "";
@@ -686,9 +689,8 @@ function tiaozhuan(queryList, fn) {
     if (splitStr) {
       query = hrefStr.split(splitStr)[1];
     } else {
-      query = href
+      query = href;
     }
-    fn();
     if (href) {
       e.preventDefault();
       gotoLink(query);
@@ -961,28 +963,15 @@ setTimeout(function () {
   });
 }, 0);
 
+// 指定跳转分割符
 setTimeout(function () {
-  // 需要指定 跳转分隔符 的列表
-  const goLinkList = {
-    "www.yyyweb.com": {
-      callback: yyywebClick
-    },
-    "www.jianshu.com": {
-      target: ["url="]
-    },
-    // 知乎专栏
-    "zhuanlan.zhihu.com": {
-      target: ["?t="] // 优先级高于target
-    }
-  };
-
   if (tiaozhuanFlag) {
     tiaozhuanFlag = false;
     const targetList = [];
-    if (goLinkList[host] && goLinkList[host].target) {
-      targetList.concat(goLinkList[host].target);
+    if (list[host] && list[host].target) {
+      targetList.concat(list[host].target);
     }
     targetList.push("target=");
-    tiaozhuan(targetList, (goLinkList[host] = noop));
+    tiaozhuan(targetList);
   }
 }, 0);

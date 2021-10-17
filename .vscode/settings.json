@@ -48,7 +48,7 @@
   "editor.fontSize": 18,
   "workbench.iconTheme": "vscode-icons",
   "editor.fontLigatures": true,
-  "editor.fontFamily": "Consolas, 'Courier New', monospace,\"萍方-简\"",
+  "editor.fontFamily": "'Cascadia Code',Consolas,monospace,\"萍方-简\"",
   "vsicons.dontShowNewVersionMessage": true,
   "files.autoSave": "onFocusChange",
   "editor.semanticHighlighting.enabled": true,
@@ -60,5 +60,5 @@
   "files.associations": {
     "*.vue": "vue"
   },
-  "workbench.colorTheme": "Monokai"
+  "workbench.colorTheme": "Default Dark+"
 }
