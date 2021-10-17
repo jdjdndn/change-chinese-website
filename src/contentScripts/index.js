@@ -7,14 +7,27 @@ import "./index.scss";
 // 'use strict';
 // const VERSION = "1.2.9";
 let performance_now = performance.now();
-const { location } = window;
-const { href, host, pathname, origin, search } = location;
-const { log, error, dir } = console;
+const {
+  location
+} = window;
+const {
+  href,
+  host,
+  pathname,
+  origin,
+  search
+} = location;
+const {
+  log,
+  error,
+  dir
+} = console;
 const vueAroundList = ["router.vuejs.org", "vuex.vuejs.org", "cli.vuejs.org"];
 let timer = null,
   tiaozhuanFlag = true; // 跳转变量
 // 开始记录时间
 let start;
+
 function logInfo(...msg) {
   msg.forEach(item => {
     switch (typeof item) {
@@ -43,6 +56,7 @@ if (window.top) {
 logInfo("Content script working...");
 
 let rmad;
+
 function rmCommonAd() {
   const ad_key = [
     "ad",
@@ -107,7 +121,8 @@ function rmCommonAd() {
     m = el.src.match(/[a-zA-Z0-9]?ads[a-zA-Z0-9]?/);
     if (m && m[0] === "ads") return true;
     const keys = ["googleads"];
-    for (const key of keys) if (el.src.includes(key)) return true;
+    for (const key of keys)
+      if (el.src.includes(key)) return true;
     return false;
   });
   iframes.forEach(el => (el.style.display = "none"));
@@ -169,12 +184,12 @@ function setStyle(str, css) {
 function throttle(fun, delay) {
   let last;
   let deferTimer;
-  return function(...args) {
+  return function (...args) {
     const that = this;
     const now = +new Date();
     if (last && now < last + delay) {
       clearTimeout(deferTimer);
-      deferTimer = setTimeout(function() {
+      deferTimer = setTimeout(function () {
         last = now;
         fun.apply(that, args);
       }, delay);
@@ -197,6 +212,11 @@ function videoPlay() {
     video.playbackRate = 1.5;
     // start = true;
   }
+}
+
+// location.href改变网址
+function changeHref(origin, pathname, type = 'https') {
+  location.href = origin + pathname
 }
 
 // 点击事件
@@ -236,7 +256,14 @@ function gotoLink(href) {
     tiaozhuanFlag = false;
   }
 }
-const params = { href, win, pathname, origin, search, host };
+const params = {
+  href,
+  win,
+  pathname,
+  origin,
+  search,
+  host
+};
 
 const list = {
   "www.baidu.com": {
@@ -318,7 +345,9 @@ const list = {
   "www.douyin.com": {
     callback: videoPlay
   },
-  "www.tiktok.com": { callback: videoPlay },
+  "www.tiktok.com": {
+    callback: videoPlay
+  },
   "read.qidian.com": {
     callback: qidian
   },
@@ -335,9 +364,12 @@ for (const k in list) {
     (host === k && list[k].moreCase && list[k].moreCase()) ||
     (host === k && !list[k].moreCase)
   ) {
-    const config = { childList: true, subtree: true };
-    const callback = function(mutationsList, observer) {
-    //   console.log("回调执行");
+    const config = {
+      childList: true,
+      subtree: true
+    };
+    const callback = function (mutationsList, observer) {
+      //   console.log("回调执行");
       list[k].callback(params);
     };
     const observer = new MutationObserver(callback);
@@ -389,7 +421,7 @@ function qidian() {
   ];
   removeArrList(adIdList, "#");
   removeArrList(adClassList, ".");
-  window.addEventListener("keyup", function(e) {
+  window.addEventListener("keyup", function (e) {
     if (e.keyCode === 13) {
       proClick("j_chapterNext", {}, "id");
     }
@@ -432,8 +464,8 @@ function baidu() {
   const content_right = document.getElementById("content_right");
   if (content_right)
     Array.from(content_right.children)
-      .filter(el => el.tagName !== "TABLE")
-      .forEach(el => el.remove());
+    .filter(el => el.tagName !== "TABLE")
+    .forEach(el => el.remove());
 }
 // 百度文库
 function wenku() {
@@ -475,8 +507,10 @@ function bilibili() {
   if ($$(".bilibili-player-video-btn-speed-name").innerHTML === "1.5x") return;
   proClick("倍速");
   proClick(
-    "bilibili-player-video-btn-speed-menu-list",
-    { all: true, i: 1 },
+    "bilibili-player-video-btn-speed-menu-list", {
+      all: true,
+      i: 1
+    },
     "class"
   );
   // start = setInterval(() => {
@@ -505,8 +539,8 @@ function biquge() {
   removeAllFunc("#content>p:last-child");
 }
 // 4hu
-function hu4tv () {
-  setStyle('body','overflow:auto')
+function hu4tv() {
+  setStyle('body', 'overflow:auto')
   // #midBox
   const adList = [
     "midBox",
@@ -534,7 +568,11 @@ function youtube() {
   // }
   videoPlay();
 }
-function mdn({ href, win }) {
+
+function mdn({
+  href,
+  win
+}) {
   const window = win;
   const us = "en-US";
   const zh = "zh-CN";
@@ -572,7 +610,11 @@ function mdn({ href, win }) {
     location.href = mdn + zh + lastUrlStr;
   }
 }
-function zhihu({ href, win }) {
+
+function zhihu({
+  href,
+  win
+}) {
   const adClassList = [
     "Post-SideActions",
     "Card.TopstoryItem.TopstoryItem--old.TopstoryItem--advertCard.TopstoryItem-isRecommend",
@@ -585,23 +627,35 @@ function zhihu({ href, win }) {
     throlleRemove(adClassList, ".");
   });
 }
+
 function juejin() {}
-function lodash({ href, win }) {
+
+function lodash({
+  href,
+  win
+}) {
   const s = href.replace("lodash.com", "www.lodashjs.com");
   location.href = s;
 }
-function webpack({ href, win }) {
+
+function webpack({
+  href,
+  win
+}) {
   const zhName = "docschina";
   // https://webpack.docschina.org/
   const str = new URL(href);
   location.href = "https://webpack." + zhName + ".org" + str.pathname;
 }
+
 function vue() {
   location.href = location.protocol + "//cn." + location.host;
 }
+
 function vite() {
   location.href = "https://cn.vitejs.dev" + location.pathname;
 }
+
 function pornhub() {
   removeFunc("#hd-rightColVideoPage");
   removeFunc("li.sniperModeEngaged.alpha");
@@ -617,7 +671,7 @@ function github() {}
 
 // 所有跳转方法
 function tiaozhuan(queryList, fn) {
-  window.addEventListener("click", function(e) {
+  window.addEventListener("click", function (e) {
     let href = "",
       query = "";
     if (e.target.href) {
@@ -629,9 +683,13 @@ function tiaozhuan(queryList, fn) {
     const splitStr = queryList.find(item => {
       return hrefStr.includes(item);
     });
-    query = hrefStr.split(splitStr)[1];
+    if (splitStr) {
+      query = hrefStr.split(splitStr)[1];
+    } else {
+      query = href
+    }
     fn();
-    if (query) {
+    if (href) {
       e.preventDefault();
       gotoLink(query);
     }
@@ -645,7 +703,7 @@ if (vueFlag && !href.includes("/zh/")) {
 }
 
 // 去除copy之后的尾巴
-document.addEventListener("copy", function(e) {
+document.addEventListener("copy", function (e) {
   e.preventDefault();
   const selection = window.getSelection().toString();
   e.clipboardData.setData("text/plain", selection);
@@ -655,6 +713,7 @@ document.addEventListener("copy", function(e) {
 // 不翻译的列表
 const noFanYiList = ["bilibili", "juejin", "zhihu", "csdn", "lanhu", "wiki"];
 const fanyiFlag = noFanYiList.every(item => !href.includes(item));
+
 function addNewElement(innerhtml, node, src) {
   const element = document.createElement(node);
   if (src) {
@@ -665,188 +724,192 @@ function addNewElement(innerhtml, node, src) {
   document.getElementsByTagName("head")[0].appendChild(element);
 }
 // if (fanyiFlag) {
-  // 隐藏顶部栏
-  const { head } = document;
-  const style = document.createElement("style");
-  const text = [
-    // 翻译按钮样式设置
-    "#google_translate_element {",
-    "  position: fixed;",
-    "  width: 80px;", // 按钮宽度(仅PC端生效)
-    "  left: 0px;", // 左侧边距离设置；如果要靠右设置，left改成right即可
-    "  bottom: 25px;", // 距离底部高度
-    "  height: 22px;", // 按钮高度
-    "  border: 2px solid #0000;", // 边框线设置
-    "  border-radius: 5px;", // 边界半径设置
-    "  z-index: 10000000;",
-    "  overflow: hidden;",
-    "  box-shadow: 1px 1px 3px 0 #0000;", // 外边框阴影设置
-    "  opacity: 0.4;", // 初始透明度设置
-    "  transform: translateX(-75%);", // 按钮隐藏百分比设置(仅PC端生效)
-    "  transition: all 0.3s;",
-    "}",
-    "#google_translate_element:hover {",
-    "  opacity: 1;", // 透明度设置
-    "  transform: translateX(0);",
-    "}",
-    "#google_translate_element .goog-te-gadget-simple {",
-    "  width: 100%;",
-    "}",
-    ".goog-te-banner-frame.skiptranslate {",
-    "  display: none",
-    "}",
-    "html,body{",
-    "  top: 0!important",
-    "}",
-    // 原文按钮样式设置
-    ".recoverPage {",
-    "  width: 45px;", // 按钮宽度(仅PC端生效)
-    "  background-color: #F0F8FF;", // 背景色设置
-    "  position: fixed;",
-    "  left: -5px;", // 左侧边距离设置；如果要靠右设置，left改成right即可
-    "  z-index: 10000000;",
-    "  bottom: 50px;", // 距离底部高度
-    "  user-select: none;",
-    "  text-align: center;",
-    "  border: 1px solid #a8a8a8;", // 边框线设置
-    "  font-size: small;",
-    "  line-height: 25px;", // 按钮高度设置(仅PC端生效)
-    "  border-radius: 15px;", // 边界半径设置
-    "  box-shadow: 1px 1px 3px 0 #C0C0C0;", // 外边框阴影设置
-    "  opacity: 0.4;", // 初始透明度设置
-    "  transform: translateX(-70%);", // 按钮隐藏百分比设置(仅PC端生效)
-    "  transition: all 0.3s;",
-    "  }",
-    ".recoverPage:hover {",
-    "  opacity: 1;", // 透明度设置
-    "  transform: translateX(0);",
-    "  }",
-    ".recoverPage:active {",
-    "  box-shadow: 1px 1px 3px 0 #888 inset;",
-    "  }",
+// 隐藏顶部栏
+const {
+  head
+} = document;
+const style = document.createElement("style");
+const text = [
+  // 翻译按钮样式设置
+  "#google_translate_element {",
+  "  position: fixed;",
+  "  width: 80px;", // 按钮宽度(仅PC端生效)
+  "  left: 0px;", // 左侧边距离设置；如果要靠右设置，left改成right即可
+  "  bottom: 25px;", // 距离底部高度
+  "  height: 22px;", // 按钮高度
+  "  border: 2px solid #0000;", // 边框线设置
+  "  border-radius: 5px;", // 边界半径设置
+  "  z-index: 10000000;",
+  "  overflow: hidden;",
+  "  box-shadow: 1px 1px 3px 0 #0000;", // 外边框阴影设置
+  "  opacity: 0.4;", // 初始透明度设置
+  "  transform: translateX(-75%);", // 按钮隐藏百分比设置(仅PC端生效)
+  "  transition: all 0.3s;",
+  "}",
+  "#google_translate_element:hover {",
+  "  opacity: 1;", // 透明度设置
+  "  transform: translateX(0);",
+  "}",
+  "#google_translate_element .goog-te-gadget-simple {",
+  "  width: 100%;",
+  "}",
+  ".goog-te-banner-frame.skiptranslate {",
+  "  display: none",
+  "}",
+  "html,body{",
+  "  top: 0!important",
+  "}",
+  // 原文按钮样式设置
+  ".recoverPage {",
+  "  width: 45px;", // 按钮宽度(仅PC端生效)
+  "  background-color: #F0F8FF;", // 背景色设置
+  "  position: fixed;",
+  "  left: -5px;", // 左侧边距离设置；如果要靠右设置，left改成right即可
+  "  z-index: 10000000;",
+  "  bottom: 50px;", // 距离底部高度
+  "  user-select: none;",
+  "  text-align: center;",
+  "  border: 1px solid #a8a8a8;", // 边框线设置
+  "  font-size: small;",
+  "  line-height: 25px;", // 按钮高度设置(仅PC端生效)
+  "  border-radius: 15px;", // 边界半径设置
+  "  box-shadow: 1px 1px 3px 0 #C0C0C0;", // 外边框阴影设置
+  "  opacity: 0.4;", // 初始透明度设置
+  "  transform: translateX(-70%);", // 按钮隐藏百分比设置(仅PC端生效)
+  "  transition: all 0.3s;",
+  "  }",
+  ".recoverPage:hover {",
+  "  opacity: 1;", // 透明度设置
+  "  transform: translateX(0);",
+  "  }",
+  ".recoverPage:active {",
+  "  box-shadow: 1px 1px 3px 0 #888 inset;",
+  "  }",
 
-    /* ----移动端UI适配设置（PC端不生效）-----------------------------------------*/
-    " @media handheld, only screen and (max-width: 768px) {",
-    // 翻译按钮样式设置
-    " #google_translate_element {",
-    "  width: 104px;", // 按钮宽度
-    "  }",
-    "  #google_translate_element .goog-te-combo {",
-    "  margin: 0;",
-    "  padding-top: 2px;",
-    "  border: none;",
-    "  }",
-    // 原文按钮样式设置
-    " .recoverPage {",
-    "  width: 34px;", // 按钮宽度
-    "  line-height: 24px;", // 按钮高度设置
-    "  transform: translateX(-40%);", // 按钮隐藏百分比设置
-    "  transform: translateX(1);", // 隐藏功能开关，0为关闭；1为打开
-    "  }",
-    "  }"
-  ].join("\n");
-  const style_text = document.createTextNode(text);
-  style.appendChild(style_text);
-  head.appendChild(style);
+  /* ----移动端UI适配设置（PC端不生效）-----------------------------------------*/
+  " @media handheld, only screen and (max-width: 768px) {",
+  // 翻译按钮样式设置
+  " #google_translate_element {",
+  "  width: 104px;", // 按钮宽度
+  "  }",
+  "  #google_translate_element .goog-te-combo {",
+  "  margin: 0;",
+  "  padding-top: 2px;",
+  "  border: none;",
+  "  }",
+  // 原文按钮样式设置
+  " .recoverPage {",
+  "  width: 34px;", // 按钮宽度
+  "  line-height: 24px;", // 按钮高度设置
+  "  transform: translateX(-40%);", // 按钮隐藏百分比设置
+  "  transform: translateX(1);", // 隐藏功能开关，0为关闭；1为打开
+  "  }",
+  "  }"
+].join("\n");
+const style_text = document.createTextNode(text);
+style.appendChild(style_text);
+head.appendChild(style);
 
-  // 恢复原网页按钮设置
-  const initScript = document.createElement("script");
-  const initText = document.createTextNode(
-    [
-      // 清除图片的请求，加快访问速度
-      "  img = [].slice.call(document.querySelectorAll('#goog-gt-tt img,#google_translate_element img'));",
-      "  img.forEach(function(v, i){",
-      "   v.src = '';",
-      "  });",
+// 恢复原网页按钮设置
+const initScript = document.createElement("script");
+const initText = document.createTextNode(
+  [
+    // 清除图片的请求，加快访问速度
+    "  img = [].slice.call(document.querySelectorAll('#goog-gt-tt img,#google_translate_element img'));",
+    "  img.forEach(function(v, i){",
+    "   v.src = '';",
+    "  });",
 
-      "  const recoverPage = document.createElement('div')",
-      "  recoverPage.setAttribute('class', 'notranslate recoverPage')",
-      "  recoverPage.innerText = '原文'",
-      "  document.body.appendChild(recoverPage)",
-      "  recoverPage.onclick = (() => {",
-      "  const phoneRecoverIframe = document.getElementById(':1.container')",
-      "  const PCRecoverIframe = document.getElementById(':2.container')",
-      "    if (phoneRecoverIframe) {",
-      "      const recoverDocument = phoneRecoverIframe.contentWindow.document",
-      "      recoverDocument.getElementById(':1.restore').click()",
-      " } else if (PCRecoverIframe) {",
-      "      const recoverDocument = PCRecoverIframe.contentWindow.document",
-      "      recoverDocument.getElementById(':2.restore').click()",
-      "    }",
-      "  })"
-    ].join("\n")
-  );
-  initScript.appendChild(initText);
-  head.appendChild(initScript);
+    "  const recoverPage = document.createElement('div')",
+    "  recoverPage.setAttribute('class', 'notranslate recoverPage')",
+    "  recoverPage.innerText = '原文'",
+    "  document.body.appendChild(recoverPage)",
+    "  recoverPage.onclick = (() => {",
+    "  const phoneRecoverIframe = document.getElementById(':1.container')",
+    "  const PCRecoverIframe = document.getElementById(':2.container')",
+    "    if (phoneRecoverIframe) {",
+    "      const recoverDocument = phoneRecoverIframe.contentWindow.document",
+    "      recoverDocument.getElementById(':1.restore').click()",
+    " } else if (PCRecoverIframe) {",
+    "      const recoverDocument = PCRecoverIframe.contentWindow.document",
+    "      recoverDocument.getElementById(':2.restore').click()",
+    "    }",
+    "  })"
+  ].join("\n")
+);
+initScript.appendChild(initText);
+head.appendChild(initScript);
 
-  // 翻译按钮设置
-  const google_translate_element = document.createElement("div");
-  google_translate_element.id = "google_translate_element";
-  document.documentElement.appendChild(google_translate_element);
+// 翻译按钮设置
+const google_translate_element = document.createElement("div");
+google_translate_element.id = "google_translate_element";
+document.documentElement.appendChild(google_translate_element);
 
-  const gtehtml =
-    "function googleTranslateElementInit() {" +
-    "new google.translate.TranslateElement({" +
-    "autoDisplay: true," +
-    "layout: google.translate.TranslateElement.InlineLayout.SIMPLE," +
-    "multilanguagePage: true," +
-    "pageLanguage: 'auto'," +
-    "includedLanguages: 'zh-CN,zh-TW,en,ja,ru'" +
-    "}, 'google_translate_element');}";
+const gtehtml =
+  "function googleTranslateElementInit() {" +
+  "new google.translate.TranslateElement({" +
+  "autoDisplay: true," +
+  "layout: google.translate.TranslateElement.InlineLayout.SIMPLE," +
+  "multilanguagePage: true," +
+  "pageLanguage: 'auto'," +
+  "includedLanguages: 'zh-CN,zh-TW,en,ja,ru'" +
+  "}, 'google_translate_element');}";
 
-  addNewElement(gtehtml, "script", false);
-  addNewElement(
-    "https://cdn.jsdelivr.net/gh/zs6/gugefanyijs@1.9/element.js",
-    "script",
-    true
-  );
+addNewElement(gtehtml, "script", false);
+addNewElement(
+  "https://cdn.jsdelivr.net/gh/zs6/gugefanyijs@1.9/element.js",
+  "script",
+  true
+);
 
-  //   google翻译的网址  //translate.google.com/translate_a/element.js?cb=googleTranslateElementInit
-  addNewElement(
-    "https://cdn.jsdelivr.net/gh/zs6/gugefanyijs@1.9/element.js",
-    "script",
-    true
-  );
+//   google翻译的网址  //translate.google.com/translate_a/element.js?cb=googleTranslateElementInit
+addNewElement(
+  "https://cdn.jsdelivr.net/gh/zs6/gugefanyijs@1.9/element.js",
+  "script",
+  true
+);
 
-  // 翻译按钮
-  // (function ziDongFanYi() {
-  //   const d = $("#google_translate_element");
-  //   if (d) {
-  //     // 选择语言的弹出盒子
-  //     const iframe = $(".goog-te-menu-frame.skiptranslate");
-  //     if (!iframe) return;
-  //     if (d.innerText.includes("中文")) return;
-  //     const zhBtn = iframe.contentWindow.document
-  //       .getElementById(":1.menuBody")
-  //       .querySelectorAll("a");
-  //     Array.from(zhBtn).forEach(item => {
-  //       if (item.innerHTML.includes("简体")) {
-  //         item.click();
-  //       }
-  //     });
-  //   }
-  // })();
+// 翻译按钮
+// (function ziDongFanYi() {
+//   const d = $("#google_translate_element");
+//   if (d) {
+//     // 选择语言的弹出盒子
+//     const iframe = $(".goog-te-menu-frame.skiptranslate");
+//     if (!iframe) return;
+//     if (d.innerText.includes("中文")) return;
+//     const zhBtn = iframe.contentWindow.document
+//       .getElementById(":1.menuBody")
+//       .querySelectorAll("a");
+//     Array.from(zhBtn).forEach(item => {
+//       if (item.innerHTML.includes("简体")) {
+//         item.click();
+//       }
+//     });
+//   }
+// })();
 // }
 
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   console.log(message, sender, sendResponse, "message,sender,sendResponse");
-  sendResponse({ text: message + " world" });
+  sendResponse({
+    text: message + " world"
+  });
 });
 
 // 页面离开事件
-window.addEventListener("beforeunload", function(event) {
+window.addEventListener("beforeunload", function (event) {
   // clearInterval(timer);
   observer.disconnect();
   // event.returnValue = "\o/";
 });
 
-setTimeout(function() {
+setTimeout(function () {
   let performance_end = performance.now();
   const time = performance_end - performance_now;
   logInfo("加载时间" + "===>" + time);
 }, 0);
 
-setTimeout(function() {
+setTimeout(function () {
   let odiv = null,
     flag = false,
     domStrList = [];
@@ -857,6 +920,7 @@ setTimeout(function() {
   odiv = document.createElement("div");
   odiv.innerHTML = divInner;
   document.body.appendChild(odiv);
+
   function removeAd(e) {
     const target = e.target;
     const targetList = Array.from(e.target.classList);
@@ -885,7 +949,7 @@ setTimeout(function() {
       dom.remove();
     } catch (error) {}
   }
-  odiv.addEventListener("click", function(e) {
+  odiv.addEventListener("click", function (e) {
     flag = !flag;
     if (flag) {
       odiv.classList.add("remove-ad-box-red");
@@ -897,7 +961,7 @@ setTimeout(function() {
   });
 }, 0);
 
-setTimeout(function() {
+setTimeout(function () {
   // 需要指定 跳转分隔符 的列表
   const goLinkList = {
     "www.yyyweb.com": {
