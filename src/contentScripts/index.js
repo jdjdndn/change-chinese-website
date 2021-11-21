@@ -257,6 +257,12 @@ function gotoLink(href) {
     tiaozhuanFlag = false;
   }
 }
+
+// disconnect
+function disconnect() {
+  observer.disconnect();
+}
+
 const params = {
   href,
   win,
@@ -407,6 +413,15 @@ const list = {
   // 知乎专栏
   "zhuanlan.zhihu.com": {
     target: ["?t="] // 优先级高于target
+  },
+  'www.cnblogs.com': {
+    callback: bokeyuan,
+    adIdList: [
+      'cnblogs_b1',
+      'cnblogs_b2',
+      'cnblogs_b3',
+      'cnblogs_b4'
+    ]
   }
 };
 
@@ -429,6 +444,11 @@ for (const k in list) {
     observer.observe(document, config);
     break;
   }
+}
+
+// 博客园
+function bokeyuan() {
+
 }
 
 // 斗鱼
@@ -500,10 +520,10 @@ function baidujingyan() {
 }
 // 哔哩哔哩
 function bilibili() {
-  // removeAllFunc("[id*=Ad], [class*=activity]");
-  // removeAllFunc(
-  //   "[id*=ad-], [id*=ad-], [class*=-ad], [class*=ad-], [id*=Ad], [id*=recommand]"
-  // );
+  const flag = $('.bilibili-player-video-btn-speed-name') && $('.bilibili-player-video-btn-speed-name').innerHTML === '1.5x'
+  if (flag) {
+    disconnect()
+  }
   removeFunc(".extension");
   removeFunc("#bili_live>a");
   removeAllFunc(".banner-card.b-wrap");
@@ -688,10 +708,6 @@ function tiaozhuan(queryList) {
     });
     if (splitStr) {
       query = hrefStr.split(splitStr)[1];
-    } else {
-      query = href;
-    }
-    if (href) {
       e.preventDefault();
       gotoLink(query);
     }
