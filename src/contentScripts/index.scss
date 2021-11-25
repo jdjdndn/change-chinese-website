@@ -21,3 +21,29 @@
     background-color: red;
   }
 }
+
+.zhihu-toolbox,
+.juejin-toolbox,
+.jianshu-toolbox,
+.sifou-toolbox {
+  position: fixed;
+  left: 0;
+  width: 300px;
+  top: 70px;
+  ul {
+    width: 100%;
+    li {
+      width: 100%;
+      padding: 5px 10px;
+      overflow: hidden; //超出的文本隐藏
+      text-overflow: ellipsis; //溢出用省略号显示
+      white-space: nowrap; //溢出不换行
+      &:hover {
+        background-color: pink;
+      }
+      a {
+        width: 100%;
+      }
+    }
+  }
+}
