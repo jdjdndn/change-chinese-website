@@ -334,6 +334,7 @@ const list = {
   },
   'www.youtube.com': {
     callback: youtube,
+    scroll: true
   },
   'developer.mozilla.org': {
     callback: mdn,
@@ -428,12 +429,14 @@ for (const k in list) {
     (host === k && !list[k].moreCase)
   ) {
     if (list[k].scroll) {
-      list[k].callback(params)
       const el = list[k].el ? document.querySelector(list[k].el) : window
       el.onscroll = function (e) {
         console.log('回调执行-scroll')
         list[k].callback(params)
       }
+      setTimeout(() => {
+        list[k].callback(params)
+      }, 500)
     } else {
       const config = {
         childList: true,
@@ -636,12 +639,9 @@ function hu4tv() {
 function csdn() {}
 // youtube
 function youtube() {
-  // const skBtn = $(".ytp-ad-skip-button.ytp-button");
-  // if (skBtn) {
-  //   console.log(skBtn.innerText, "text");
-  //   skBtn.click();
-  // }
   videoPlay()
+  const linkList = [...getDomList('.ytd-rich-grid-renderer #meta #video-title-link'), ...getDomList('.ytd-watch-next-secondary-results-renderer #dismissible .metadata a')]
+  addLinkListBox(linkList, 'youtube-toolbox')
 }
 
 function mdn({

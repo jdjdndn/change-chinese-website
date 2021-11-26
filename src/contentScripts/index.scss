@@ -29,14 +29,16 @@
 .google-toolbox,
 .bokeyuan-toolbox,
 .momoyu-toolbox,
-.xiaodao-toolbox {
+.xiaodao-toolbox,
+.youtube-toolbox {
   position: fixed;
   left: 0;
   width: 300px;
   top: 70px;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 70px);
   overflow-y: auto;
   z-index: 999999;
+  background-color: #fff;
   ul {
     width: 100%;
     li {
@@ -52,10 +54,14 @@
         background-color: pink;
       }
       a {
+        display: flex;
+        align-items: center;
         width: 100%;
         height: 100%;
         cursor: pointer;
+        color: #262626;
         text-decoration: none;
+        touch-action: none;
       }
     }
   }
@@ -70,4 +76,9 @@
   width: 395px;
   height: calc(100vh - 300px);
   background-color: #fff;
+}
+.youtube-toolbox {
+  left: unset;
+  right: 0;
+  width: 500px;
 }
