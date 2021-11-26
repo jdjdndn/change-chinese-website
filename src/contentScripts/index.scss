@@ -25,25 +25,49 @@
 .zhihu-toolbox,
 .juejin-toolbox,
 .jianshu-toolbox,
-.sifou-toolbox {
+.sifou-toolbox,
+.google-toolbox,
+.bokeyuan-toolbox,
+.momoyu-toolbox,
+.xiaodao-toolbox {
   position: fixed;
   left: 0;
   width: 300px;
   top: 70px;
+  height: calc(100vh - 150px);
+  overflow-y: auto;
+  z-index: 999999;
   ul {
     width: 100%;
     li {
+      display: flex;
+      align-items: center;
       width: 100%;
-      padding: 5px 10px;
+      height: 25px;
       overflow: hidden; //超出的文本隐藏
       text-overflow: ellipsis; //溢出用省略号显示
       white-space: nowrap; //溢出不换行
+      box-sizing: border-box;
       &:hover {
         background-color: pink;
       }
       a {
         width: 100%;
+        height: 100%;
+        cursor: pointer;
+        text-decoration: none;
       }
     }
   }
+}
+.google-toolbox,
+.momoyu-toolbox {
+  right: 0;
+  left: unset;
+}
+.momoyu-toolbox {
+  top: 300px;
+  width: 395px;
+  height: calc(100vh - 300px);
+  background-color: #fff;
 }

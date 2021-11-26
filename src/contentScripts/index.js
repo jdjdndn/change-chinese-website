@@ -247,6 +247,28 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
   })
 }
 
+// 添加盒子
+function addLinkListBox(linkList = [], boxName = '') {
+  let liListStr = ''
+  linkList.forEach(item => {
+    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
+  })
+  const htmlStr = '<div class="' + boxName + '">' +
+    '<ul>' +
+    liListStr +
+    '</ul>' +
+    '</div>'
+  const root = document.querySelector('body')
+  const box = document.querySelector('.' + boxName)
+  if (box) {
+    box.innerHTML = htmlStr
+  } else {
+    const box = document.createElement('div')
+    box.innerHTML = htmlStr
+    root.parentNode.insertBefore(box, root)
+  }
+}
+
 // 跳转方法
 function gotoLink(href) {
   // 判断是否为网址，是网址可以直接跳转
@@ -377,6 +399,23 @@ const list = {
   'segmentfault.com': {
     callback: sifou,
     scroll: true
+  },
+  'www.google.com': {
+    callback: google,
+    scroll: true
+  },
+  'www.cnblogs.com': {
+    callback: bokeyuan,
+    scroll: true
+  },
+  'momoyu.cc': {
+    callback: momoyu,
+    scroll: true,
+    el: '#app'
+  },
+  'www.xiaodao0.com': {
+    callback: xiaodao,
+    scroll: true
   }
 }
 
@@ -390,7 +429,8 @@ for (const k in list) {
   ) {
     if (list[k].scroll) {
       list[k].callback(params)
-      window.onscroll = function (e) {
+      const el = list[k].el ? document.querySelector(list[k].el) : window
+      el.onscroll = function (e) {
         console.log('回调执行-scroll')
         list[k].callback(params)
       }
@@ -743,7 +783,7 @@ function jianshu() {
 // 思否
 function sifou() {
   setStyle('.d-none.col-2', 'position:fixed!important;right:0;')
-  const linkList = [...getDomList('.content-list-wrap .list-group-flush .list-group-item h5 a')]
+  const linkList = [...getDomList('.content-list-wrap .list-group-flush .list-group-item h5 a'), ...getDomList('.article-content h3 a')]
   let liListStr = ''
   linkList.forEach(item => {
     liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
@@ -762,6 +802,28 @@ function sifou() {
     box.innerHTML = htmlStr
     root.parentNode.insertBefore(box, root)
   }
+}
+
+// google
+function google() {
+  const linkList = [...getDomList('.g .yuRUbf>a')]
+  addLinkListBox(linkList, 'google-toolbox')
+}
+// 博客园
+function bokeyuan() {
+  setStyle('#main_content', 'max-width:1200px;margin:auto')
+  const linkList = [...getDomList('#post_list .post-item .post-item-title'), ...getDomList('#side_right .item-list a')]
+  addLinkListBox(linkList, 'bokeyuan-toolbox')
+}
+// 摸摸鱼
+function momoyu() {
+  const linkList = [...getDomList('.content .hot-outer ul li a')]
+  addLinkListBox(linkList, 'momoyu-toolbox')
+}
+// 小刀娱乐网
+function xiaodao() {
+  const linkList = [...getDomList('#CommonListCell .post-list .post-title a'), ...getDomList('.LanMu_WenZhangCeBianLan ul li a')]
+  addLinkListBox(linkList, 'xiaodao-toolbox')
 }
 
 function lodash({
