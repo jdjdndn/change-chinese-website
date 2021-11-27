@@ -272,17 +272,27 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
     root.parentNode.insertBefore(box, root)
   }
 }
-// 将一个
-function addLinkListBoxPro(linkList = [], boxName = 'toolbox') {
+// 将一个dom元素下的一个a标签放进一行li中或者多个a放进一个li
+// linkList为页面上a元素的父亲的集合
+function addLinkListBoxPro(linkList = [], boxName = 'toolbox', oneLine = true) {
   let aLinkStr = '',
     linkListStr = ''
   linkList.forEach(item => {
     const itemList = Array.from(item.querySelectorAll('a'))
     if (itemList.length <= 0) return
-    itemList.forEach(it => {
-      aLinkStr += `<a href='${it.toString()}' rel="noopener noreferrer" target="_blank">${it.innerText}</a>`
-    })
-    linkListStr += `<li>${aLinkStr}</li>\n`
+    if (oneLine) {
+      // 一个li标签多个a
+      itemList.forEach(it => {
+        aLinkStr += `<a title='${it.innerText}' href='${it.toString()}' rel="noopener noreferrer" target="_blank">${it.innerText}</a>`
+      })
+      linkListStr += `<li>${aLinkStr}</li>\n`
+    } else {
+      // 一个li标签里面一个a标签
+      itemList.forEach(it => {
+        aLinkStr += `<li title='${it.innerText}'><a href='${it.toString()}' rel="noopener noreferrer" target="_blank">${it.innerText}</a></li>\n`
+      })
+      linkListStr += aLinkStr
+    }
     aLinkStr = ''
   })
   console.log(linkListStr, '---------linkListStr-----');
@@ -313,9 +323,29 @@ const params = {
 }
 
 // dom数组
-function getDomList(str) {
+function getDomList(str, filterClassList) {
+  let arr = []
   const list = document.querySelectorAll(str)
-  return Array.from(list)
+  arr = Array.from(list)
+  if (!filterClassList) {
+    return arr
+  }
+  arr = arr.map(it => it.cloneNode(true))
+  if (Array.isArray(filterClassList)) {
+    filterClassList.forEach(it => {
+      arr.forEach(item => {
+        const filterIt = Array.from(item.querySelectorAll(it))
+        filterIt.forEach(t => t.remove())
+      })
+    })
+  } else if (typeof filterClassList === 'string') {
+    arr.forEach(item => {
+      const filterIt = Array.from(item.querySelectorAll(filterClassList))
+      filterIt.forEach(t => t.remove())
+    })
+  }
+  arr.forEach(it => console.log(it))
+  return arr
 }
 
 const list = {
@@ -333,6 +363,7 @@ const list = {
   },
   'www.bilibili.com': {
     callback: bilibili,
+    scroll: true
   },
   'www.it1352.cn': {
     callback: it1352,
@@ -387,7 +418,7 @@ const list = {
     moreCase: () =>
       !href.includes('cn.') && !vueAroundList.some(it => href.includes(it)),
   },
-  'www.pornhub.com': {
+  'cn.pornhub.com': {
     callback: pornhub,
   },
   'www.yyyweb.com': {
@@ -458,7 +489,7 @@ for (const k in list) {
       }
       setTimeout(() => {
         list[k].callback(params)
-      }, 500)
+      }, 1000)
     } else {
       const config = {
         childList: true,
@@ -614,8 +645,9 @@ function bilibili() {
     },
     'class'
   )
-  const linkList = [...getDomList('#app .video-card-reco .info-box a'), ...getDomList('.b-wrap .zone-list-box>a:first-child')]
-  addLinkListBoxPro()
+  const linkList = [...getDomList('#app .video-card-reco .info-box'), ...getDomList('.b-wrap .zone-list-box'), ...getDomList('#reco_list .video-page-card .info', '.count')]
+  console.log(linkList, '-------------');
+  addLinkListBoxPro(linkList, 'bilibili-toolbox', false)
 }
 // it屋
 function it1352() {
@@ -731,48 +763,15 @@ function zhihu({
     console.log(link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText), '--------');
     return includesList.some(item => (link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText) || "").toLowerCase().includes(item))
   })
-  let liListStr = ''
-  linkList.forEach(item => {
-    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
-  })
-  console.log(liListStr, linkList, '----------------');
-  const htmlStr = '<div class="zhihu-toolbox">' +
-    '<ul>' +
-    liListStr +
-    '</ul>' +
-    '</div>'
-  const zhihuBox = document.querySelector('.zhihu-toolbox')
-  if (zhihuBox) {
-    zhihuBox.innerHTML = htmlStr
-  } else {
-    const box = document.createElement('div')
-    box.innerHTML = htmlStr
-    root.parentNode.insertBefore(box, root)
-  }
+  addLinkListBox(linkList, 'zhihu-toolbox')
 }
 
 function juejin() {
   setStyle('.article-suspended-panel.article-suspended-panel', 'right: 17rem;margin-right:unset')
+  setStyle('.article-catalog', 'overflow-y:auto;height:calc(100vh - 100px)')
   rmSomeSelf('.entry-list>.item', '.tag')
   const linkList = [...getDomList('.content-wrapper .title-row a')]
-  let liListStr = ''
-  linkList.forEach(item => {
-    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
-  })
-  const htmlStr = '<div class="juejin-toolbox">' +
-    '<ul>' +
-    liListStr +
-    '</ul>' +
-    '</div>'
-  const root = document.querySelector('#juejin')
-  const juejinBox = document.querySelector('.juejin-toolbox')
-  if (juejinBox) {
-    juejinBox.innerHTML = htmlStr
-  } else {
-    const box = document.createElement('div')
-    box.innerHTML = htmlStr
-    root.parentNode.insertBefore(box, root)
-  }
+  addLinkListBox(linkList, 'juejin-toolbox')
 }
 // 简书
 function jianshu() {
@@ -782,47 +781,13 @@ function jianshu() {
 
   setStyle('._3Pnjry', 'right: 200px;left:unset')
   const linkList = [...getDomList('._1iTR78 .em6wEs>a'), ...getDomList('.itemlist-box .content>a'), ...getDomList('._3Z3nHf ._26Hhi2 a'), ...getDomList('._3Z3nHf .cuOxAY a')]
-  let liListStr = ''
-  linkList.forEach(item => {
-    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
-  })
-  const htmlStr = '<div class="jianshu-toolbox">' +
-    '<ul>' +
-    liListStr +
-    '</ul>' +
-    '</div>'
-  const root = document.querySelector('body')
-  const jianshuBox = document.querySelector('.jianshu-toolbox')
-  if (jianshuBox) {
-    jianshuBox.innerHTML = htmlStr
-  } else {
-    const box = document.createElement('div')
-    box.innerHTML = htmlStr
-    root.parentNode.insertBefore(box, root)
-  }
+  addLinkListBox(linkList, 'jianshu-toolbox')
 }
 // 思否
 function sifou() {
   setStyle('.d-none.col-2', 'position:fixed!important;right:0;')
   const linkList = [...getDomList('.content-list-wrap .list-group-flush .list-group-item h5 a'), ...getDomList('.article-content h3 a')]
-  let liListStr = ''
-  linkList.forEach(item => {
-    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
-  })
-  const htmlStr = '<div class="sifou-toolbox">' +
-    '<ul>' +
-    liListStr +
-    '</ul>' +
-    '</div>'
-  const root = document.querySelector('body')
-  const sifouBox = document.querySelector('.sifou-toolbox')
-  if (sifouBox) {
-    sifouBox.innerHTML = htmlStr
-  } else {
-    const box = document.createElement('div')
-    box.innerHTML = htmlStr
-    root.parentNode.insertBefore(box, root)
-  }
+  addLinkListBox(linkList, 'sifou-toolbox')
 }
 
 // google
@@ -879,9 +844,6 @@ function pornhub() {
   removeFunc('li.sniperModeEngaged.alpha')
   const adIdList = ['pb_content', 'pb_top_bar']
   removeArrList(adIdList, '#')
-  // const hideClassList = ["sniperModeEngaged.alpha"];
-  // $(".mgp_preRollSkipButton").click();
-  // hideArrList(hideClassList, ".");
 }
 
 function github() {
@@ -897,7 +859,6 @@ function github() {
     linkListStr += `<li>${aLinkStr}</li>\n`
     aLinkStr = ''
   })
-  console.log(linkListStr, '---------linkListStr-----');
   addLinkListBox([], 'xiaodao-toolbox', linkListStr)
 }
 //  https://product.pconline.com.cn/ class: fixLeftQRcode  id:xuanfu_wapper
