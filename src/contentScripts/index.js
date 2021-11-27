@@ -247,12 +247,16 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
   })
 }
 
-// 添加盒子
-function addLinkListBox(linkList = [], boxName = '') {
+// 将一个dom元素下的一个a标签放进一行li中
+function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   let liListStr = ''
-  linkList.forEach(item => {
-    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
-  })
+  if (customlinkStr) {
+    liListStr = customlinkStr
+  } else {
+    linkList.forEach(item => {
+      liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
+    })
+  }
   const htmlStr = '<div class="' + boxName + '">' +
     '<ul>' +
     liListStr +
@@ -267,6 +271,22 @@ function addLinkListBox(linkList = [], boxName = '') {
     box.innerHTML = htmlStr
     root.parentNode.insertBefore(box, root)
   }
+}
+// 将一个
+function addLinkListBoxPro(linkList = [], boxName = 'toolbox') {
+  let aLinkStr = '',
+    linkListStr = ''
+  linkList.forEach(item => {
+    const itemList = Array.from(item.querySelectorAll('a'))
+    if (itemList.length <= 0) return
+    itemList.forEach(it => {
+      aLinkStr += `<a href='${it.toString()}' rel="noopener noreferrer" target="_blank">${it.innerText}</a>`
+    })
+    linkListStr += `<li>${aLinkStr}</li>\n`
+    aLinkStr = ''
+  })
+  console.log(linkListStr, '---------linkListStr-----');
+  addLinkListBox([], boxName, linkListStr)
 }
 
 // 跳转方法
@@ -339,8 +359,9 @@ const list = {
   'developer.mozilla.org': {
     callback: mdn,
   },
-  'www.github.com': {
+  'github.com': {
     callback: github,
+    scroll: true
   },
   'www.zhihu.com': {
     callback: zhihu,
@@ -412,6 +433,7 @@ const list = {
   'momoyu.cc': {
     callback: momoyu,
     scroll: true,
+    // 滚动事件绑定者
     el: '#app'
   },
   'www.xiaodao0.com': {
@@ -592,9 +614,8 @@ function bilibili() {
     },
     'class'
   )
-  // start = setInterval(() => {
-  //   proClick("change-btn", {}, "class");
-  // }, 5000);
+  const linkList = [...getDomList('#app .video-card-reco .info-box a'), ...getDomList('.b-wrap .zone-list-box>a:first-child')]
+  addLinkListBoxPro()
 }
 // it屋
 function it1352() {
@@ -812,6 +833,7 @@ function google() {
 // 博客园
 function bokeyuan() {
   setStyle('#main_content', 'max-width:1200px;margin:auto')
+  setStyle('#post_list', 'width: 800px')
   const linkList = [...getDomList('#post_list .post-item .post-item-title'), ...getDomList('#side_right .item-list a')]
   addLinkListBox(linkList, 'bokeyuan-toolbox')
 }
@@ -862,7 +884,22 @@ function pornhub() {
   // hideArrList(hideClassList, ".");
 }
 
-function github() {}
+function github() {
+  const linkList = [...getDomList('.d-md-flex .d-flex h3')]
+  let aLinkStr = '',
+    linkListStr = ''
+  linkList.forEach(item => {
+    const itemList = Array.from(item.querySelectorAll('a'))
+    if (itemList.length <= 0) return
+    itemList.forEach(it => {
+      aLinkStr += `<a href='${it.toString()}' rel="noopener noreferrer" target="_blank">${it.innerText}</a>`
+    })
+    linkListStr += `<li>${aLinkStr}</li>\n`
+    aLinkStr = ''
+  })
+  console.log(linkListStr, '---------linkListStr-----');
+  addLinkListBox([], 'xiaodao-toolbox', linkListStr)
+}
 //  https://product.pconline.com.cn/ class: fixLeftQRcode  id:xuanfu_wapper
 
 // 所有跳转方法
