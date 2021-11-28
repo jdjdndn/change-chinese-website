@@ -247,9 +247,12 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
   })
 }
 
+let scrollTop = 0
+
 // 将一个dom元素下的一个a标签放进一行li中
 function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   let liListStr = ''
+  const box = document.querySelector('.' + boxName)
   if (customlinkStr) {
     liListStr = customlinkStr
   } else {
@@ -257,17 +260,15 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
       liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
     })
   }
-  const htmlStr = '<div class="' + boxName + '">' +
-    '<ul>' +
+  const htmlStr = '<ul>' +
     liListStr +
-    '</ul>' +
-    '</div>'
-  const root = document.querySelector('body')
-  const box = document.querySelector('.' + boxName)
+    '</ul>'
   if (box) {
     box.innerHTML = htmlStr
   } else {
+    const root = document.querySelector('body')
     const box = document.createElement('div')
+    box.className = boxName
     box.innerHTML = htmlStr
     root.parentNode.insertBefore(box, root)
   }
@@ -295,7 +296,6 @@ function addLinkListBoxPro(linkList = [], boxName = 'toolbox', oneLine = true) {
     }
     aLinkStr = ''
   })
-  console.log(linkListStr, '---------linkListStr-----');
   addLinkListBox([], boxName, linkListStr)
 }
 
@@ -436,6 +436,10 @@ const list = {
   'www.tiktok.com': {
     callback: videoPlay
   },
+  'www.qidian.com': {
+    callback: qidian,
+    scroll: true
+  },
   'read.qidian.com': {
     callback: qidian,
   },
@@ -553,11 +557,13 @@ function qidian() {
   ]
   removeArrList(adIdList, '#')
   removeArrList(adClassList, '.')
-  window.addEventListener('keyup', function (e) {
-    if (e.keyCode === 13) {
-      proClick('j_chapterNext', {}, 'id')
-    }
-  })
+  // window.addEventListener('keyup', function (e) {
+  //   if (e.keyCode === 13) {
+  //     proClick('j_chapterNext', {}, 'id')
+  //   }
+  // })
+  const linkList = [...getDomList('.wrap .cf .fl li'), ...getDomList('.wrap .box-center .fl li'), ...getDomList('.wrap .box-center .rank-list .name-box')]
+  addLinkListBoxPro(linkList, 'qidian-toolbox')
 }
 
 // 樱桃
