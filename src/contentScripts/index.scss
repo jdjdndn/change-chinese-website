@@ -32,7 +32,9 @@
 .xiaodao-toolbox,
 .youtube-toolbox,
 .bilibili-toolbox,
-.qidian-toolbox {
+.qidian-toolbox,
+.zhangxinxu-toolbox,
+.toutiao-toolbox {
   position: fixed;
   left: 0;
   width: 300px;
@@ -83,4 +85,8 @@
   left: unset;
   right: 0;
   width: 500px;
+}
+.toutiao-toolbox {
+  left: unset;
+  right: 0;
 }

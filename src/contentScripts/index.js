@@ -247,8 +247,6 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
   })
 }
 
-let scrollTop = 0
-
 // 将一个dom元素下的一个a标签放进一行li中
 function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   let liListStr = ''
@@ -260,6 +258,7 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
       liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
     })
   }
+  if (!liListStr) return
   const htmlStr = '<ul>' +
     liListStr +
     '</ul>'
@@ -420,6 +419,7 @@ const list = {
   },
   'cn.pornhub.com': {
     callback: pornhub,
+    scroll: true
   },
   'www.yyyweb.com': {
     callback: yyyweb,
@@ -474,6 +474,14 @@ const list = {
   'www.xiaodao0.com': {
     callback: xiaodao,
     scroll: true
+  },
+  'www.zhangxinxu.com': {
+    callback: zhangxinxu,
+    scroll: true
+  },
+  'so.toutiao.com': {
+    callback: toutiao,
+    scroll: true
   }
 }
 
@@ -516,6 +524,18 @@ function react({
   pathname
 }) {
   location.href = 'https://zh-hans.reactjs.org' + pathname
+}
+
+// 今日头条
+function toutiao() {
+  const linkList = [...getDomList('.s-result-list .cs-view-block .text-darker a'), ...getDomList('.sldebar_out .silebar_inner li a')]
+  addLinkListBox(linkList, 'toutiao-toolbox')
+}
+
+// 张鑫旭官网
+function zhangxinxu() {
+  const linkList = [...getDomList('#content .status-publish h2 a'), ...getDomList('.sldebar_out .silebar_inner li a')]
+  addLinkListBox(linkList, 'zhangxinxu-toolbox')
 }
 
 // 斗鱼
@@ -850,6 +870,7 @@ function pornhub() {
   removeFunc('li.sniperModeEngaged.alpha')
   const adIdList = ['pb_content', 'pb_top_bar']
   removeArrList(adIdList, '#')
+  videoPlay()
 }
 
 function github() {
