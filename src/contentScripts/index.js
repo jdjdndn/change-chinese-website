@@ -482,6 +482,10 @@ const list = {
   'so.toutiao.com': {
     callback: toutiao,
     scroll: true
+  },
+  'sso.iflytek.com:8443': {
+    callback: iflytek,
+    scroll: true
   }
 }
 
@@ -518,6 +522,11 @@ for (const k in list) {
   }
 }
 
+// iflytek自动登录
+function iflytek() {
+  const loginBtn = document.querySelector('.user-btn')
+  loginBtn && loginBtn.click()
+}
 // react官网
 function react({
   host,
