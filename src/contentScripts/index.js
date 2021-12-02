@@ -269,7 +269,7 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
     const box = document.createElement('div')
     box.className = boxName
     box.innerHTML = htmlStr
-    root.parentNode.insertBefore(box, root)
+    root.insertBefore(box, root.children[0])
   }
 }
 // 将一个dom元素下的一个a标签放进一行li中或者多个a放进一个li
@@ -1137,16 +1137,7 @@ setTimeout(function () {
 }, 0)
 
 setTimeout(function () {
-  let odiv = null,
-    flag = false,
-    domStrList = []
-  const divInner = `
-  <div class='remove-ad-box'>
-  </div>
-  `
-  odiv = document.createElement('div')
-  odiv.innerHTML = divInner
-  document.body.appendChild(odiv)
+  return false
 
   function removeAd(e) {
     const target = e.target
@@ -1176,16 +1167,6 @@ setTimeout(function () {
       dom.remove()
     } catch (error) {}
   }
-  odiv.addEventListener('click', function (e) {
-    flag = !flag
-    if (flag) {
-      odiv.classList.add('remove-ad-box-red')
-      window.addEventListener('click', removeAd)
-    } else {
-      odiv.classList.remove('remove-ad-box-red')
-      window.removeEventListener('click', removeAd)
-    }
-  })
 }, 0)
 
 setTimeout(function () {
@@ -1211,5 +1192,69 @@ setTimeout(function () {
     }
     targetList.push('target=')
     tiaozhuan(targetList, (goLinkList[host] = noop))
+  }
+
+  // ctrl + space 实现点击鼠标所在位置
+  const body = document.querySelector("body");
+  let allNodeList = [],
+    point = {};
+
+  function getNodeList(body, nodeList = [], index = 0) {
+    const childrenList = [...body.children];
+    if (childrenList.length <= 0) {
+      allNodeList = nodeList;
+      return nodeList;
+    }
+    index++;
+    childrenList.forEach((item) => {
+      const filterNodeNameList = ['SCRIPT', 'STYLE']
+      if (filterNodeNameList.includes(item.nodeName)) return
+      const point = item.getBoundingClientRect();
+      nodeList.push({
+        node: item,
+        point,
+        index,
+      });
+      getNodeList(item, nodeList, index);
+    });
+  }
+  window.addEventListener("mousemove", function (e) {
+    point = {
+      x: e.pageX,
+      y: e.pageY,
+    };
+  });
+  window.addEventListener("keydown", function (e) {
+    const code = e.keyCode;
+    if (e.ctrlKey && code === 32) {
+      if (allNodeList.length === 0) {
+        getNodeList(body, []);
+      }
+      const chooseList = allNodeList.filter((item) => inDom(item, point));
+      const len = chooseList.length;
+      if (len === 0) return
+      let index = 0;
+      chooseList.forEach((item, i) => {
+        if (index < item.index) {
+          index = item.index;
+        }
+      });
+      const item = chooseList.find((item) => item.index === index);
+      console.log(item, point, '------');
+      item.node.click()
+    }
+  });
+
+  function inDom(node, point) {
+    const nodePoint = node.point;
+    if (
+      point.x >= nodePoint.x &&
+      point.x <= nodePoint.right &&
+      point.y >= nodePoint.y &&
+      point.y <= nodePoint.bottom
+    ) {
+      return true;
+    }
+    return false;
   }
 }, 0)
