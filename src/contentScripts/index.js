@@ -25,8 +25,6 @@ const {
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 let timer = null,
   tiaozhuanFlag = true // 跳转变量
-// 开始记录时间
-let start
 
 function logInfo(msg) {
   log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
@@ -115,6 +113,13 @@ rmCommonAd()
 
 function noop() {}
 
+function debounce(fn, delay = 300) {
+  if (timer) {
+    clearTimeout(timer);
+  }
+  timer = setTimeout(fn, delay);
+}
+
 function $(domStr, dom = document) {
   return dom.querySelector(domStr)
 }
@@ -186,7 +191,6 @@ function throttle(fun, delay) {
 
 // 视频播放
 function videoPlay() {
-  // if (start) return false;
   logInfo('视频加速')
   const video = $('video')
   if (video) {
@@ -194,7 +198,6 @@ function videoPlay() {
       video.play()
     }
     video.playbackRate = 1.5
-    // start = true;
   }
 }
 
@@ -1196,18 +1199,16 @@ setTimeout(function () {
 
   // ctrl + space 实现点击鼠标所在位置
   const body = document.querySelector("body");
-  let allNodeList = [],
-    point = {};
+  let point = {};
 
   function getNodeList(body, nodeList = [], index = 0) {
     const childrenList = [...body.children];
     if (childrenList.length <= 0) {
-      allNodeList = nodeList;
       return nodeList;
     }
     index++;
     childrenList.forEach((item) => {
-      const filterNodeNameList = ['SCRIPT', 'STYLE']
+      const filterNodeNameList = ['SCRIPT', 'STYLE', 'IFRAME']
       if (filterNodeNameList.includes(item.nodeName)) return
       const point = item.getBoundingClientRect();
       nodeList.push({
@@ -1219,29 +1220,33 @@ setTimeout(function () {
     });
   }
   window.addEventListener("mousemove", function (e) {
-    point = {
-      x: e.pageX,
-      y: e.pageY,
-    };
+    debounce(() => {
+      point = {
+        x: e.pageX,
+        y: e.pageY,
+      };
+    })
   });
   window.addEventListener("keydown", function (e) {
     const code = e.keyCode;
     if (e.ctrlKey && code === 32) {
-      if (allNodeList.length === 0) {
-        getNodeList(body, []);
-      }
-      const chooseList = allNodeList.filter((item) => inDom(item, point));
-      const len = chooseList.length;
-      if (len === 0) return
-      let index = 0;
-      chooseList.forEach((item, i) => {
-        if (index < item.index) {
-          index = item.index;
-        }
-      });
-      const item = chooseList.find((item) => item.index === index);
-      console.log(item, point, '------');
-      item.node.click()
+      debounce(() => {
+        let nodeList = []
+        getNodeList(body, nodeList);
+        const chooseList = nodeList.filter((item) => inDom(item, point));
+        const len = chooseList.length;
+        console.log(nodeList, chooseList, '-----nodeList');
+        if (len === 0) return
+        let index = 0;
+        chooseList.forEach((item, i) => {
+          if (index < item.index) {
+            index = item.index;
+          }
+        });
+        const item = chooseList.find((item) => item.index === index);
+        console.log(item, chooseList, '------');
+        item.node.click()
+      })
     }
   });
 
