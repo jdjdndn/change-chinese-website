@@ -22,6 +22,9 @@ const {
   error,
   dir
 } = console
+
+// TODOhref地址，用来对比现在的href，重新获取页面上的所有node节点
+let originHref = href
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 let timer = null,
   tiaozhuanFlag = true // 跳转变量
@@ -433,9 +436,6 @@ const list = {
   '360yy.cn': {
     callback: videoPlay,
   },
-  'www.douyin.com': {
-    callback: videoPlay,
-  },
   'www.tiktok.com': {
     callback: videoPlay
   },
@@ -491,6 +491,11 @@ const list = {
     scroll: true
   }
 }
+// mutationObsever配置
+const config = {
+  childList: true,
+  subtree: true
+}
 
 clearInterval(timer)
 for (const k in list) {
@@ -510,10 +515,6 @@ for (const k in list) {
         list[k].callback(params)
       }, 1000)
     } else {
-      const config = {
-        childList: true,
-        subtree: true
-      }
       const callback = function (mutationsList, observer) {
         console.log('回调执行-observer')
         list[k].callback(params)
@@ -1237,14 +1238,28 @@ setTimeout(function () {
       };
     })
   });
+
+  // 获取所有元素
+  let nodeList = []
+  // href变化重新获取所有node节点
+  if (href !== originHref) {
+    nodeList = []
+    getNodeListCallback()
+  }
+
+  function getNodeListCallback() {
+    nodeList = []
+    getNodeList(body, nodeList);
+  }
+  const observer = new MutationObserver(getNodeListCallback)
+  observer.observe(document, config)
+
   window.addEventListener("keydown", function (e) {
     const code = e.keyCode;
     if (e.ctrlKey && code === 32) {
       debounce(() => {
-        let nodeList = []
-        getNodeList(body, nodeList);
         const chooseList = nodeList.filter((item) => inDom(item, point));
-        console.log(chooseList, '-----chooseList-----');
+        console.log(chooseList, nodeList, '-----chooseList-----');
         const len = chooseList.length;
         if (len === 0) return
         let index = 0;
