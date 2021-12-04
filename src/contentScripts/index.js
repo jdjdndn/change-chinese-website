@@ -1200,7 +1200,7 @@ setTimeout(function () {
   // ctrl + space 实现点击鼠标所在位置
   const body = document.querySelector("body");
   let point = {};
-
+  //获取页面上所有的dom节点
   function getNodeList(body, nodeList = [], index = 0) {
     const childrenList = [...body.children];
     if (childrenList.length <= 0) {
@@ -1219,11 +1219,21 @@ setTimeout(function () {
       getNodeList(item, nodeList, index);
     });
   }
+  // 从子孙往上找，直到找到可以点击的dom
+  function findParentClick(item) {
+    console.log(item, 'findParentClicK可点击的对象');
+    if ('click' in item) {
+      item.click()
+      return false
+    }
+    const parent = item.parentNode
+    findParentClick(parent)
+  }
   window.addEventListener("mousemove", function (e) {
     debounce(() => {
       point = {
-        x: e.pageX,
-        y: e.pageY,
+        x: e.clientX,
+        y: e.clientY,
       };
     })
   });
@@ -1234,8 +1244,8 @@ setTimeout(function () {
         let nodeList = []
         getNodeList(body, nodeList);
         const chooseList = nodeList.filter((item) => inDom(item, point));
+        console.log(chooseList, '-----chooseList-----');
         const len = chooseList.length;
-        console.log(nodeList, chooseList, '-----nodeList');
         if (len === 0) return
         let index = 0;
         chooseList.forEach((item, i) => {
@@ -1244,14 +1254,16 @@ setTimeout(function () {
           }
         });
         const item = chooseList.find((item) => item.index === index);
-        console.log(item, chooseList, '------');
-        item.node.click()
+        findParentClick(item.node)
       })
     }
   });
 
   function inDom(node, point) {
     const nodePoint = node.point;
+    if (node.node.classList.contains('account-list')) {
+      console.log(node, nodePoint, point, 'node');
+    }
     if (
       point.x >= nodePoint.x &&
       point.x <= nodePoint.right &&
