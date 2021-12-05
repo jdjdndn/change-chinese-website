@@ -2,7 +2,9 @@ const path = require("path");
 const webpack = require("webpack");
 const fg = require("fast-glob");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const {
+  CleanWebpackPlugin
+} = require("clean-webpack-plugin");
 const ExtensionReloader = require("webpack-extension-reloader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const VueLoaderPlugin = require("vue-loader/lib/plugin");
@@ -28,8 +30,7 @@ function configFunc(env, argv) {
       filename: "[name].js"
     },
     module: {
-      rules: [
-        {
+      rules: [{
           test: /\.vue$/,
           loader: "vue-loader",
           options: {
@@ -57,7 +58,9 @@ function configFunc(env, argv) {
             {
               loader: "sass-loader",
               // eslint-disable-next-line
-              options: { implementation: require("sass") }
+              options: {
+                implementation: require("sass")
+              }
             }
           ]
         },
@@ -99,9 +102,15 @@ function configFunc(env, argv) {
         cleanStaleWebpackAssets: false
       }),
       new CopyWebpackPlugin({
-        patterns: [
-          { from: "assets", to: "assets" },
-          { from: "manifest.json", to: "manifest.json", flatten: true }
+        patterns: [{
+            from: "assets",
+            to: "assets"
+          },
+          {
+            from: "manifest.json",
+            to: "manifest.json",
+            flatten: true
+          }
         ]
       }),
       new HtmlWebpackPlugin({

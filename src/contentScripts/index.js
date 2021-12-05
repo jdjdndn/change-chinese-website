@@ -23,11 +23,11 @@ const {
   dir
 } = console
 
-// TODOhref地址，用来对比现在的href，重新获取页面上的所有node节点
-let originHref = href
+let liListStr = '' // 链接列表字符串
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 let timer = null,
-  tiaozhuanFlag = true // 跳转变量
+  tiaozhuanFlag = true, // 跳转变量
+  runIndex = 0 // 运行次数
 
 function logInfo(msg) {
   log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
@@ -197,10 +197,11 @@ function videoPlay() {
   logInfo('视频加速')
   const video = $('video')
   if (video) {
-    if (video.paused) {
+    if (video.paused && runIndex < 1) {
       video.play()
     }
     video.playbackRate = 1.5
+    runIndex++
   }
 }
 
@@ -255,28 +256,29 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
 
 // 将一个dom元素下的一个a标签放进一行li中
 function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
-  let liListStr = ''
+  liListStr = ''
+  const hrefList = []
   const box = document.querySelector('.' + boxName)
   if (customlinkStr) {
     liListStr = customlinkStr
   } else {
     linkList.forEach(item => {
+      hrefList.push({
+        nodeName: 'a',
+        href: item.toString(),
+        text: item.innerText
+      })
       liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
     })
   }
   if (!liListStr) return
-  const htmlStr = '<ul>' +
-    liListStr +
-    '</ul>'
-  if (box) {
-    box.innerHTML = htmlStr
-  } else {
-    const root = document.querySelector('body')
-    const box = document.createElement('div')
-    box.className = boxName
-    box.innerHTML = htmlStr
-    root.insertBefore(box, root.children[0])
-  }
+  console.log(liListStr, 'liListStr---');
+  chrome.runtime.sendMessage({
+    liListStr,
+    hrefList
+  }, function (response) {
+    console.log(response, 'content-script');
+  });
 }
 // 将一个dom元素下的一个a标签放进一行li中或者多个a放进一个li
 // linkList为页面上a元素的父亲的集合
@@ -367,8 +369,7 @@ const list = {
     callback: baidujingyan,
   },
   'www.bilibili.com': {
-    callback: bilibili,
-    scroll: true
+    callback: bilibili
   },
   'www.it1352.cn': {
     callback: it1352,
@@ -389,23 +390,19 @@ const list = {
     callback: csdn,
   },
   'www.youtube.com': {
-    callback: youtube,
-    scroll: true
+    callback: youtube
   },
   'developer.mozilla.org': {
     callback: mdn,
   },
   'github.com': {
-    callback: github,
-    scroll: true
+    callback: github
   },
   'www.zhihu.com': {
-    callback: zhihu,
-    scroll: true
+    callback: zhihu
   },
   'juejin.cn': {
-    callback: juejin,
-    scroll: true
+    callback: juejin
   },
   'www.lodash.com': {
     callback: lodash,
@@ -424,8 +421,7 @@ const list = {
       !href.includes('cn.') && !vueAroundList.some(it => href.includes(it)),
   },
   'cn.pornhub.com': {
-    callback: pornhub,
-    scroll: true
+    callback: pornhub
   },
   'www.yyyweb.com': {
     callback: yyyweb,
@@ -440,8 +436,7 @@ const list = {
     callback: videoPlay
   },
   'www.qidian.com': {
-    callback: qidian,
-    scroll: true
+    callback: qidian
   },
   'read.qidian.com': {
     callback: qidian,
@@ -453,42 +448,33 @@ const list = {
     callback: react
   },
   'www.jianshu.com': {
-    callback: jianshu,
-    scroll: true
+    callback: jianshu
   },
   'segmentfault.com': {
-    callback: sifou,
-    scroll: true
+    callback: sifou
   },
   'www.google.com': {
-    callback: google,
-    scroll: true
+    callback: google
   },
   'www.cnblogs.com': {
-    callback: bokeyuan,
-    scroll: true
+    callback: bokeyuan
   },
   'momoyu.cc': {
     callback: momoyu,
-    scroll: true,
     // 滚动事件绑定者
     el: '#app'
   },
   'www.xiaodao0.com': {
-    callback: xiaodao,
-    scroll: true
+    callback: xiaodao
   },
   'www.zhangxinxu.com': {
-    callback: zhangxinxu,
-    scroll: true
+    callback: zhangxinxu
   },
   'so.toutiao.com': {
-    callback: toutiao,
-    scroll: true
+    callback: toutiao
   },
   'sso.iflytek.com:8443': {
-    callback: iflytek,
-    scroll: true
+    callback: iflytek
   }
 }
 // mutationObsever配置
@@ -498,34 +484,28 @@ const config = {
 }
 
 clearInterval(timer)
-for (const k in list) {
-  // console.log(origin, k, origin.includes(k), "看看走的是哪一个");
 
-  if (
-    (host === k && list[k].moreCase && list[k].moreCase()) ||
-    (host === k && !list[k].moreCase)
-  ) {
-    if (list[k].scroll) {
-      const el = list[k].el ? document.querySelector(list[k].el) : window
-      el.onscroll = function (e) {
-        console.log('回调执行-scroll')
-        list[k].callback(params)
-      }
-      setTimeout(() => {
-        list[k].callback(params)
-      }, 1000)
-    } else {
+function main() {
+  for (const k in list) {
+    // console.log(host, k, "看看走的是哪一个");
+
+    if (
+      (host === k && list[k].moreCase && list[k].moreCase()) ||
+      (host === k && !list[k].moreCase)
+    ) {
+
       const callback = function (mutationsList, observer) {
         console.log('回调执行-observer')
         list[k].callback(params)
       }
       const observer = new MutationObserver(callback)
       observer.observe(document, config)
+      break
     }
-    break
   }
-}
 
+}
+main()
 // iflytek自动登录
 function iflytek() {
   const loginBtn = document.querySelector('.user-btn')
@@ -684,9 +664,8 @@ function bilibili() {
     },
     'class'
   )
-  const linkList = [...getDomList('#app .video-card-reco .info-box'), ...getDomList('.b-wrap .zone-list-box'), ...getDomList('#reco_list .video-page-card .info', '.count')]
-  console.log(linkList, '-------------');
-  addLinkListBoxPro(linkList, 'bilibili-toolbox', false)
+  const linkList = [...getDomList('#app .video-card-reco .info-box'), ...getDomList('.b-wrap .zone-list-box .video-card-common', '.card-pic')]
+  addLinkListBoxPro(linkList, 'bilibili-toolbox')
 }
 // it屋
 function it1352() {
@@ -731,6 +710,7 @@ function hu4tv() {
 function csdn() {}
 // youtube
 function youtube() {
+  setStyle('.html5-video-player', 'display: block')
   videoPlay()
   const linkList = [...getDomList('.ytd-rich-grid-renderer #meta #video-title-link'), ...getDomList('.ytd-watch-next-secondary-results-renderer #dismissible .metadata a')]
   addLinkListBox(linkList, 'youtube-toolbox')
@@ -809,7 +789,7 @@ function juejin() {
   setStyle('.article-suspended-panel.article-suspended-panel', 'right: 17rem;margin-right:unset')
   setStyle('.article-catalog', 'overflow-y:auto;height:calc(100vh - 100px)')
   rmSomeSelf('.entry-list>.item', '.tag')
-  const linkList = [...getDomList('.content-wrapper .title-row a')]
+  const linkList = [...getDomList('.content-wrapper .title-row a'), ...getDomList('.result-list .item .title-row a')]
   addLinkListBox(linkList, 'juejin-toolbox')
 }
 // 简书
@@ -1120,13 +1100,6 @@ if (fanyiFlag) {
   })()
 }
 
-chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  console.log(message, sender, sendResponse, 'message,sender,sendResponse')
-  sendResponse({
-    text: message + ' world'
-  })
-})
-
 // 页面离开事件
 window.addEventListener('beforeunload', function (event) {
   // clearInterval(timer);
@@ -1230,6 +1203,7 @@ setTimeout(function () {
     const parent = item.parentNode
     findParentClick(parent)
   }
+
   window.addEventListener("mousemove", function (e) {
     debounce(() => {
       point = {
@@ -1241,11 +1215,6 @@ setTimeout(function () {
 
   // 获取所有元素
   let nodeList = []
-  // href变化重新获取所有node节点
-  if (href !== originHref) {
-    nodeList = []
-    getNodeListCallback()
-  }
 
   function getNodeListCallback() {
     nodeList = []
@@ -1253,6 +1222,15 @@ setTimeout(function () {
   }
   const observer = new MutationObserver(getNodeListCallback)
   observer.observe(document, config)
+
+  window.addEventListener('visibilitychange', function (event) {
+    if (document.hidden) return
+    chrome.runtime.sendMessage({
+      liListStr
+    }, function (response) {
+      console.log(response, 'content-script');
+    });
+  });
 
   window.addEventListener("keydown", function (e) {
     const code = e.keyCode;

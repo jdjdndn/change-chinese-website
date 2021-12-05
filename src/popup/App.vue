@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-09-18 10:14:45
+ * @LastEditTime: 2021-12-05 08:51:47
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -14,18 +14,19 @@
 
 <script>
 export default {
-  data () {
+  data() {
     return {
       msg: 'Welcome!--popup'
-    }
+    };
   },
+  mounted() {},
   methods: {
-    openBackground () {
+    openBackground() {
       // alert(chrome.extension.getURL('background.html'), 'extension');
-      window.open(chrome.extension.getURL('options.html'))
+      window.open(chrome.extension.getURL('options.html'));
     }
   }
-}
+};
 </script>
 
 <style lang="scss"></style>
