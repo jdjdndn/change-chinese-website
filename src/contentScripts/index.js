@@ -23,7 +23,8 @@ const {
   dir
 } = console
 
-let liListStr = '' // 链接列表字符串
+let liListStr = '', // 链接列表字符串
+  linkObj = {} // 链接对象 key是href
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 let timer = null,
   tiaozhuanFlag = true, // 跳转变量
@@ -263,6 +264,7 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
     liListStr = customlinkStr
   } else {
     linkList.forEach(item => {
+      linkObj[item.toString()] = item.innerText
       hrefList.push({
         nodeName: 'a',
         href: item.toString(),
@@ -275,6 +277,7 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   console.log(liListStr, 'liListStr---');
   chrome.runtime.sendMessage({
     liListStr,
+    linkObj,
     hrefList
   }, function (response) {
     console.log(response, 'content-script');

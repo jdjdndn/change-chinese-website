@@ -1,13 +1,14 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-05 16:04:30
+ * @LastEditTime: 2021-12-06 23:12:54
  * @LastEditors: yucheng
  * @Description: 。。。
 -->
 <template>
   <div>
     <ul />
+    <ol></ol>
   </div>
 </template>
 
@@ -20,6 +21,7 @@ export default {
   mounted() {
     // ctrl + space 实现点击鼠标所在位置
     const body = document.querySelector('body');
+    let linkObjBacket = {};
     let point = {},
       timer = null, // mutationObsever配置
       config = {
@@ -27,6 +29,7 @@ export default {
         subtree: true
       };
     const ul = document.querySelector('ul');
+    // const ol = document.querySelector('ol');
     chrome.runtime.onMessage.addListener(function (
       request,
       sender,
@@ -37,8 +40,16 @@ export default {
           ? 'from a content script:' + sender.tab.url
           : 'from the extension'
       );
-      console.log(request, 'request', ul);
-      ul.innerHTML = request.liListStr;
+      console.log(request.linkObj, 'request', ul);
+      // ul.innerHTML = request.liListStr;
+      linkObjBacket = { ...linkObjBacket, ...request.linkObj };
+      let olListStr = '';
+      for (const k in linkObjBacket) {
+        const href = k;
+        const text = linkObjBacket[k];
+        olListStr += `<li title='${text}'><a href='${href}' rel="noopener noreferrer" target="_blank">${text}</a></li>`;
+      }
+      ul.innerHTML = olListStr;
     });
     return;
     function debounce(fn, delay = 300) {
