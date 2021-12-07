@@ -407,21 +407,21 @@ const list = {
   'juejin.cn': {
     callback: juejin
   },
-  'www.lodash.com': {
-    callback: lodash,
+  'lodash.com': {
+    // callback: lodash,
+    rehref: 'www.lodash.com'
   },
   'webpack.js.org': {
-    callback: webpack,
+    // callback: webpack,
+    rehref: 'https://webpack.docschina.org'
   },
   'vuejs.org': {
-    callback: vue,
-    moreCase: () =>
-      !href.includes('cn.') && !vueAroundList.some(it => href.includes(it)),
+    // callback: vue,
+    rehref: 'https://cn.vuejs.org'
   },
   'vitejs.dev': {
-    callback: vite,
-    moreCase: () =>
-      !href.includes('cn.') && !vueAroundList.some(it => href.includes(it)),
+    rehref: 'https://cn.vitejs.dev'
+    // callback: vite,
   },
   'cn.pornhub.com': {
     callback: pornhub
@@ -448,7 +448,8 @@ const list = {
     callback: douyu,
   },
   'reactjs.org': {
-    callback: react
+    // callback: react
+    rehref: 'https://zh-hans.reactjs.org'
   },
   'www.jianshu.com': {
     callback: jianshu
@@ -478,8 +479,12 @@ const list = {
   },
   'sso.iflytek.com:8443': {
     callback: iflytek
+  },
+  'git.iflytek.com': {
+    callback: gitlab
   }
 }
+
 // mutationObsever配置
 const config = {
   childList: true,
@@ -496,6 +501,10 @@ function main() {
       (host === k && list[k].moreCase && list[k].moreCase()) ||
       (host === k && !list[k].moreCase)
     ) {
+      if (list[k].rehref) {
+        location.href = list[k].rehref + pathname
+        return false
+      }
 
       const callback = function (mutationsList, observer) {
         console.log('回调执行-observer')
@@ -511,16 +520,21 @@ function main() {
 main()
 // iflytek自动登录
 function iflytek() {
-  const loginBtn = document.querySelector('.user-btn')
-  loginBtn && loginBtn.click()
+  // const loginBtn = document.querySelector('.user-btn')
+  // loginBtn && loginBtn.click()
+}
+
+// gitlab
+function gitlab() {
+  proClick('oauth-login-cas3', {}, 'id')
 }
 // react官网
-function react({
-  host,
-  pathname
-}) {
-  location.href = 'https://zh-hans.reactjs.org' + pathname
-}
+// function react({
+//   host,
+//   pathname
+// }) {
+//   location.href = 'https://zh-hans.reactjs.org' + pathname
+// }
 
 // 今日头条
 function toutiao() {
@@ -839,26 +853,8 @@ function lodash({
   href,
   win
 }) {
-  const s = href.replace('lodash.com', 'www.lodashjs.com')
-  location.href = s
-}
-
-function webpack({
-  href,
-  win
-}) {
-  const zhName = 'docschina'
-  // https://webpack.docschina.org/
-  const str = new URL(href)
-  location.href = 'https://webpack.' + zhName + '.org' + str.pathname
-}
-
-function vue() {
-  location.href = location.protocol + '//cn.' + location.host
-}
-
-function vite() {
-  location.href = 'https://cn.vitejs.dev' + location.pathname
+  // const s = href.replace('lodash.com', 'www.lodashjs.com')
+  // location.href = s
 }
 
 function pornhub() {

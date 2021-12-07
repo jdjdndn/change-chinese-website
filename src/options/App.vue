@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-07 19:55:03
+ * @LastEditTime: 2021-12-07 20:11:05
  * @LastEditors: yucheng
  * @Description: 。。。
 -->
@@ -175,7 +175,7 @@ ul {
   flex-wrap: wrap;
   padding: 0 200px;
   li {
-    width: 25%;
+    width: 33.3%;
     padding: 5px 10px;
     overflow: hidden; //超出的文本隐藏
     text-overflow: ellipsis; //溢出用省略号显示
