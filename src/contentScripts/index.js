@@ -311,17 +311,13 @@ function addLinkListBoxPro(linkList = [], boxName = 'toolbox', oneLine = true) {
 
 // 跳转方法
 function gotoLink(href) {
-  // 判断是否为网址，是网址可以直接跳转
-  const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
-  if (href && reg.test(href)) {
-    const a = document.createElement('a')
-    a.target = '_blank'
-    a.rel = 'noopener noreferrer nofollow'
-    a.href = href
-    a.click()
-    a.remove()
-    tiaozhuanFlag = false
-  }
+  const a = document.createElement('a')
+  a.target = '_blank'
+  a.rel = 'noopener noreferrer nofollow'
+  a.href = href
+  a.click()
+  a.remove()
+  tiaozhuanFlag = false
 }
 const params = {
   href,
@@ -803,8 +799,8 @@ function zhihu({
 }
 
 function juejin() {
-  setStyle('.article-suspended-panel.article-suspended-panel', 'right: 17rem;margin-right:unset')
-  setStyle('.article-catalog', 'overflow-y:auto;height:calc(100vh - 100px)')
+  // setStyle('.article-suspended-panel.article-suspended-panel', 'right: 17rem;margin-right:unset')
+  // setStyle('.article-catalog', 'overflow-y:auto;height:calc(100vh - 100px)')
   rmSomeSelf('.entry-list>.item', '.tag')
   const linkList = [...getDomList('.content-wrapper .title-row a'), ...getDomList('.result-list .item .title-row a')]
   addLinkListBox(linkList, 'juejin-toolbox')
@@ -815,13 +811,13 @@ function jianshu() {
   const c = document.querySelectorAll('iframe')
   Array.from(c).forEach(it => it.remove())
 
-  setStyle('._3Pnjry', 'right: 200px;left:unset')
+  // setStyle('._3Pnjry', 'right: 200px;left:unset')
   const linkList = [...getDomList('._1iTR78 .em6wEs>a'), ...getDomList('.itemlist-box .content>a'), ...getDomList('._3Z3nHf ._26Hhi2 a'), ...getDomList('._3Z3nHf .cuOxAY a')]
   addLinkListBox(linkList, 'jianshu-toolbox')
 }
 // 思否
 function sifou() {
-  setStyle('.d-none.col-2', 'position:fixed!important;right:0;')
+  // setStyle('.d-none.col-2', 'position:fixed!important;right:0;')
   const linkList = [...getDomList('.content-list-wrap .list-group-flush .list-group-item h5 a'), ...getDomList('.article-content h3 a')]
   addLinkListBox(linkList, 'sifou-toolbox')
 }
@@ -833,8 +829,8 @@ function google() {
 }
 // 博客园
 function bokeyuan() {
-  setStyle('#main_content', 'max-width:1200px;margin:auto')
-  setStyle('#post_list', 'width: 800px')
+  // setStyle('#main_content', 'max-width:1200px;margin:auto')
+  // setStyle('#post_list', 'width: 800px')
   const linkList = [...getDomList('#post_list .post-item .post-item-title'), ...getDomList('#side_right .item-list a')]
   addLinkListBox(linkList, 'bokeyuan-toolbox')
 }
@@ -886,21 +882,22 @@ function github() {
 function tiaozhuan(queryList, fn) {
   window.addEventListener('click', function (e) {
     let href = '',
-      query = ''
+      newHref = ''
     if (e.target.href) {
       href = e.target.href
     } else if (e.target.parentNode && e.target.parentNode.href) {
       href = e.target.parentNode.href
     }
-    const hrefStr = decodeURIComponent(href)
-    const splitStr = queryList.find(item => {
-      return hrefStr.includes(item)
-    })
-    query = hrefStr.split(splitStr)[1]
-    fn()
-    if (query) {
+    const index = href.lastIndexOf('http')
+    if (index !== -1) {
+      newHref = href.slice(index)
+    }
+    // 判断是否为网址，是网址可以直接跳转
+    if (newHref && index !== href.indexOf('http')) {
+      // const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
+      const hrefStr = decodeURIComponent(newHref)
       e.preventDefault()
-      gotoLink(query)
+      gotoLink(hrefStr)
     }
   })
 }
@@ -1163,10 +1160,10 @@ setTimeout(function () {
   if (tiaozhuanFlag) {
     tiaozhuanFlag = false
     const targetList = []
-    if (goLinkList[host] && goLinkList[host].target) {
-      targetList.concat(goLinkList[host].target)
-    }
-    targetList.push('target=')
+    // if (goLinkList[host] && goLinkList[host].target) {
+    //   targetList.concat(goLinkList[host].target)
+    // }
+    // targetList.push('target=')
     tiaozhuan(targetList, (goLinkList[host] = noop))
   }
 
@@ -1225,7 +1222,8 @@ setTimeout(function () {
   window.addEventListener('visibilitychange', function (event) {
     if (document.hidden) return
     chrome.runtime.sendMessage({
-      liListStr
+      liListStr,
+      linkObj
     }, function (response) {
       console.log(response, 'content-script');
     });

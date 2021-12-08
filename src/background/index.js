@@ -1,27 +1,10 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-09-19 16:29:58
+ * @LastEditTime: 2021-12-08 21:39:47
  * @LastEditors: yucheng
  * @Description: ...
  */
-// OnInstall handler
-chrome.runtime.onInstalled.addListener(details => {
-  console.log(details)
-  chrome.declarativeContent?.onPageChanged.removeRules(undefined, function() {
-    chrome.declarativeContent.onPageChanged.addRules([
-      {
-        conditions: [
-          new chrome.declarativeContent.PageStateMatcher({
-            pageUrl: { hostEquals: 'www.baidu.com' },
-          }),
-        ],
-        actions: [new chrome.declarativeContent.ShowPageAction()],
-      },
-    ])
-  })
-})
-
 // popup通信
 // const popup = chrome.extension.getViews({ type: "popup" })[0]
 // popup.GetMessageFromBackground("给我的兄弟popup点东西~")
@@ -49,7 +32,8 @@ const blockUrlList = {
 // 查找过滤参数的数组
 let sliceArr = []
 // 过滤参数的索引
-let kIndex
+let kIndex, linkObj = {}
+
 function handlerRequest(details) {
   // console.log(details, 'details')
   // 如果找到了一个要拦截的参数，记录位置，下次从找到的位置接着找
@@ -66,10 +50,12 @@ function handlerRequest(details) {
       }
       sliceArr = blockUrlList[k].adList.slice(num)
       const index = sliceArr.findIndex(it => details.url.includes(it))
-      console.log(sliceArr, index, 'index')
+      // console.log(sliceArr, index, 'index')
       if (index !== -1) {
         num = index
-        return { cancel: true }
+        return {
+          cancel: true
+        }
       } else {
         // 结束或者没找到的时候重置索引
         sliceArr = blockUrlList[k].adList
@@ -96,8 +82,7 @@ function handlerRequest(details) {
 }
 
 chrome.webRequest.onBeforeRequest.addListener(
-  handlerRequest,
-  {
+  handlerRequest, {
     urls: ['<all_urls>'],
   },
   // 定义获取哪些权限
@@ -108,7 +93,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 chrome.contextMenus.create({
   title: '使用谷歌搜索：%s', // %s表示选中的文字
   contexts: ['selection'], // 只有当选中文字时才会出现此右键菜单
-  onclick: function(params) {
+  onclick: function (params) {
     console.log(params, 'params')
     // 注意不能使用location.href，因为location是属于background的window对象
     chrome.tabs.create({
@@ -124,15 +109,34 @@ chrome.runtime.onMessage.addListener(function notify(
   sender,
   sendResponse
 ) {
-  console.log(message, sender, sendResponse, 'message')
-  return true
-})
+  linkObj = {
+    ...linkObj,
+    ...message.linkObj
+  }
+  const newLinkObj = {}
+  for (const k in linkObj) {
+    const {
+      origin
+    } = new URL(k)
+    if (newLinkObj[origin]) {
+      newLinkObj[origin][k] = linkObj[k]
+    } else {
+      newLinkObj[origin] = {}
+    }
+  }
+  console.log(linkObj, newLinkObj);
+});
 
-chrome.browserAction.onClicked.addListener(function() {
-  chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+chrome.browserAction.onClicked.addListener(function () {
+  chrome.tabs.query({
+    active: true,
+    currentWindow: true
+  }, function (tabs) {
     const tabId = tabs.length ? tabs[0].id : null
-    const message = { name: 'chengyu' }
-    chrome.tabs.sendMessage(tabId, message, function(response) {
+    const message = {
+      name: 'chengyu'
+    }
+    chrome.tabs.sendMessage(tabId, message, function (response) {
       console.log(response, 'background')
       return true
     })

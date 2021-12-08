@@ -1,100 +1,162 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-10-05 07:28:27
+ * @LastEditTime: 2021-12-08 21:37:37
  * @LastEditors: yucheng
  * @Description: ...
 -->
 <template>
   <div class="newtab">
-    <h1>{{ msg }}</h1>
-    <div class="content-wrap">
-      <div
-        v-for="(item, i) in list"
+    <!-- <h1>{{ msg }}</h1> -->
+    <div class="search-btn-list">
+      <input
+        ref="input"
+        v-model="value"
+        type="search"
+        class="yucheng-search-input"
+        @focus="searchInputFocus = true"
+        @blur="searchInputFocus = false"
+      />
+      <button
+        v-for="(item, i) in searchBtnList"
         :key="i"
-        class="content-item"
+        @click="handleSearchChange(item.type)"
       >
+        {{ item.text }}
+      </button>
+    </div>
+    <div class="content-wrap">
+      <div v-for="(item, i) in list" :key="i" class="content-item">
         <div class="icon">
-          <img
-            :src="item.icon || '../assets/icons/icon_64.png'"
-            alt
-          >
+          <img :src="item.icon || '../assets/icons/icon_64.png'" alt />
           <i @click="remove(i)">×</i>
         </div>
-        <a
-          :href="item.href"
-          @click="clickA(item, $event, i)"
-        >{{
+        <a :href="item.href" @click="clickA(item, $event, i)">{{
           item.name
         }}</a>
       </div>
     </div>
-    <button @click="handlerClick">
-      添加表单
-    </button>
-    <div
-      v-show="show"
-      class="form"
-    >
+    <button @click="handlerClick">添加表单</button>
+    <div v-show="show" class="form">
       <div class="form-item">
         <span>icon:</span>
-        <input
-          v-model="formData.icon"
-          type="text"
-        >
+        <input v-model="formData.icon" type="text" />
       </div>
       <div class="form-item">
         <span>name:</span>
-        <input
-          v-model="formData.name"
-          type="text"
-        >
+        <input v-model="formData.name" type="text" />
       </div>
       <div class="form-item">
         <span>href:</span>
-        <input
-          v-model="formData.href"
-          type="text"
-        >
+        <input v-model="formData.href" type="text" />
       </div>
       <div class="form-item">
-        <button @click="cancel">
-          取消
-        </button>
-        <button @click="confirm">
-          确定
-        </button>
+        <button @click="cancel">取消</button>
+        <button @click="confirm">确定</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import config from "./config";
+import config from './config';
 
 export default {
   data() {
     return {
-      msg: "欢迎来到我的页面，我是靓仔",
+      msg: '欢迎来到我的页面，我是靓仔',
       list: [],
       show: false,
       formData: {
-        icon: "",
-        name: "",
-        href: ""
-      }
+        icon: '',
+        name: '',
+        href: ''
+      },
+      value: '',
+      searchBtnList: [
+        {
+          text: '精确搜索',
+          type: 1
+        },
+        {
+          text: '指定网站',
+          type: 2
+        },
+        {
+          text: '通配符搜索',
+          type: 3
+        },
+        {
+          text: '缩小范围',
+          type: 4
+        },
+        {
+          text: '文档搜索',
+          type: 5
+        }
+      ],
+      searchInputFocus: false
     };
   },
   created() {
-    console.log(chrome, "newTab");
+    console.log(chrome, 'newTab');
     this.getCurrentTabId();
     this.init();
   },
+  mounted() {
+    window.addEventListener('keyup', this.keyup);
+  },
   methods: {
+    handleSearchChange(type) {
+      if (type === 1) {
+        const a = '"';
+        if (this.value.includes(a)) {
+          return;
+        }
+        this.value = a + this.value + a;
+      } else if (type === 2) {
+        const a = ' site:';
+        if (this.value.includes(a)) {
+          return;
+        }
+        this.value = this.value + a;
+      } else if (type === 3) {
+        const a = '*';
+        if (this.value.startWith(a)) {
+          return;
+        }
+        this.value = a + this.value;
+      } else if (type === 4) {
+        const a = ' -';
+        if (this.value.includes(a)) {
+          return;
+        }
+        this.value = this.value + a;
+      } else if (type === 5) {
+        const a = ' fileType:';
+        if (this.value.includes(a)) {
+          return;
+        }
+        this.value = this.value + a;
+      }
+      this.focus();
+      console.log(this.value);
+    },
+    focus() {
+      this.$refs.input.focus();
+    },
+    // '/'键搜索框自动聚焦
+    keyup(e) {
+      if (e.keyCode === 191) {
+        if (!this.searchInputFocus) {
+          this.$refs.input.focus();
+        }
+      }
+    },
     // 获取当前选项卡ID
     getCurrentTabId(callback) {
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        console.log(tabs, "tabs");
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        console.log(tabs, 'tabs');
         if (callback) callback(tabs.length ? tabs[0].id : null);
       });
     },
@@ -114,7 +176,7 @@ export default {
     // 初始化获取数据
     init() {
       const that = this;
-      chrome.storage.sync.get(["linkList"], function(result) {
+      chrome.storage.sync.get(['linkList'], function (result) {
         if (!result.linkList) {
           that.list = config.list;
           return true;
@@ -147,13 +209,13 @@ export default {
     // 设置数据
     setData(list, clearForm = false) {
       const that = this;
-      chrome.storage.sync.set({ linkList: list }, function() {
+      chrome.storage.sync.set({ linkList: list }, function () {
         that.init.call(that);
         if (clearForm) {
           that.formData = {
-            icon: "",
-            name: "",
-            href: ""
+            icon: '',
+            name: '',
+            href: ''
           };
         }
       });
@@ -217,7 +279,7 @@ $height: 80px;
         text-decoration: none;
         font-size: 12px;
         &:before {
-          content: "";
+          content: '';
           position: absolute;
           width: $width;
           height: $height;
