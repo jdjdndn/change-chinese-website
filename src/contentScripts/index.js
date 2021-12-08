@@ -274,7 +274,7 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
     })
   }
   if (!liListStr) return
-  console.log(liListStr, 'liListStr---');
+  // console.log(liListStr, 'liListStr---');
   chrome.runtime.sendMessage({
     liListStr,
     linkObj,
@@ -401,7 +401,8 @@ const list = {
     callback: zhihu
   },
   'juejin.cn': {
-    callback: juejin
+    callback: juejin,
+    scroll: '.entry-list'
   },
   'lodash.com': {
     // callback: lodash,
@@ -500,6 +501,16 @@ function main() {
       if (list[k].rehref) {
         location.href = list[k].rehref + pathname
         return false
+      }
+      if (list[k].scroll) {
+        function loadData(e) {
+          if (e.keyCode === 40 && e.ctrlKey) {
+            const a = $('.entry-list')
+            window.scrollTo(0, a.offsetHeight)
+          }
+        }
+        window.removeEventListener('keydown', loadData)
+        window.addEventListener('keydown', loadData)
       }
 
       const callback = function (mutationsList, observer) {
@@ -788,7 +799,7 @@ function zhihu({
   win.addEventListener('scroll', function scroll() {
     throlleRemove(adClassList, '.')
   })
-  const includesList = ['web', 'js', 'javascript', 'node', 'npm', 'github', 'jquery', 'css', 'html', '音视频', '前端', 'vue', 'react', 'nginx', 'webpack', 'http', 'websocket', 'ts', 'typescript', 'chrome']
+  const includesList = ['web', 'js', 'javascript', 'node', 'npm', 'github', 'jquery', 'css', 'html', '音视频', '前端', 'vue', 'react', 'nginx', 'webpack', 'http', 'websocket', 'ts', 'typescript', 'chrome', 'linux', 'iframe', 'electron']
   const root = document.querySelector('#root')
   let linkList = Array.from(root.querySelectorAll('a'))
   linkList = linkList.filter(link => {
@@ -917,7 +928,7 @@ document.addEventListener('copy', function (e) {
 
 // 谷歌翻译
 // 不翻译的列表
-const fanYiList = ['stackoverflow.com', 'www.npmjs.com']
+const fanYiList = ['stackoverflow.com', 'www.npmjs.com', 'developer.chrome.com']
 const fanyiFlag = fanYiList.some(item => host === item)
 
 function addNewElement(innerhtml, node, src) {
