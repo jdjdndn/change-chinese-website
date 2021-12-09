@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-08 23:46:15
+ * @LastEditTime: 2021-12-09 20:34:43
  * @LastEditors: yucheng
  * @Description: 。。。
 -->
@@ -173,7 +173,7 @@ li {
 ul {
   display: flex;
   flex-wrap: wrap;
-  padding: 100px 200px;
+  padding: 50px 200px;
   li {
     width: 33.3%;
     padding: 5px 10px;

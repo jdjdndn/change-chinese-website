@@ -370,6 +370,17 @@ const list = {
   'www.bilibili.com': {
     callback: bilibili
   },
+  'search.bilibili.com': {
+    callback: bilibili,
+    nextStep: {
+      // 分页按钮集合
+      nextStepList: '.pages .page-item',
+      // 当前激活的按钮类名，不加点
+      curActiveClass: 'active',
+      // 实际点击的 nextStepList 下某个元素
+      clickBtn: 'button'
+    }
+  },
   'www.it1352.cn': {
     callback: it1352,
   },
@@ -389,7 +400,8 @@ const list = {
     callback: csdn,
   },
   'www.youtube.com': {
-    callback: youtube
+    callback: youtube,
+    scroll: '#primary .style-scope #contents'
   },
   'developer.mozilla.org': {
     callback: mdn,
@@ -449,7 +461,8 @@ const list = {
     rehref: 'https://zh-hans.reactjs.org'
   },
   'www.jianshu.com': {
-    callback: jianshu
+    callback: jianshu,
+    scroll: '.note-list'
   },
   'segmentfault.com': {
     callback: sifou
@@ -502,11 +515,36 @@ function main() {
         location.href = list[k].rehref + pathname
         return false
       }
+      // ctrl + ⬇
       if (list[k].scroll) {
         function loadData(e) {
           if (e.keyCode === 40 && e.ctrlKey) {
-            const a = $('.entry-list')
+            const a = $(list[k].scroll)
             window.scrollTo(0, a.offsetHeight)
+          }
+        }
+        window.removeEventListener('keydown', loadData)
+        window.addEventListener('keydown', loadData)
+      }
+
+      // ctrl + ⬇
+      if (list[k].nextStep) {
+        function loadData(e) {
+          if (e.ctrlKey) {
+            const btnList = getDomList(list[k].nextStep.nextStepList)
+            const index = btnList.findIndex(it => it.classList.contains(list[k].nextStep.curActiveClass))
+            if (index === -1) return false
+            if (e.keyCode === 40) {
+              // ctrl + ⬇
+              if (!btnList[index + 1]) return
+              const needClickNode = btnList[index + 1].querySelector(list[k].nextStep.clickBtn)
+              needClickNode.click()
+            } else if (e.keyCode === 38) {
+              // ctrl + ⬆
+              if (!btnList[index - 1]) return
+              const needClickNode = btnList[index - 1].querySelector(list[k].nextStep.clickBtn)
+              needClickNode.click()
+            }
           }
         }
         window.removeEventListener('keydown', loadData)
@@ -688,7 +726,7 @@ function bilibili() {
     },
     'class'
   )
-  const linkList = [...getDomList('#app .video-card-reco .info-box'), ...getDomList('.b-wrap .zone-list-box .video-card-common', '.card-pic')]
+  const linkList = [...getDomList('#app .video-card-reco .info-box'), ...getDomList('.b-wrap .zone-list-box .video-card-common', '.card-pic'), ...getDomList('.video-list .video-item>a')]
   addLinkListBoxPro(linkList, 'bilibili-toolbox')
 }
 // it屋
