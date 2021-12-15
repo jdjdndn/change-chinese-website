@@ -911,7 +911,7 @@ function pornhub() {
 }
 
 function github() {
-  const linkList = [...getDomList('.d-md-flex .d-flex h3')]
+  const linkList = [...getDomList('.d-md-flex .d-flex h3'), ...getDomList('.repo-list .d-flex .f4.text-normal a')]
   let aLinkStr = '',
     linkListStr = ''
   linkList.forEach(item => {

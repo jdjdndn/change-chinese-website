@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-08 21:37:37
+ * @LastEditTime: 2021-12-14 22:08:32
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -11,19 +11,26 @@
     <div class="search-btn-list">
       <input
         ref="input"
-        v-model="value"
         type="search"
+        v-model="value"
         class="yucheng-search-input"
         @focus="searchInputFocus = true"
         @blur="searchInputFocus = false"
-      />
-      <button
+      /><button @click="handleSearch" ref="search-btn">搜索</button><br />
+      google:<button
         v-for="(item, i) in searchBtnList"
         :key="i"
         @click="handleSearchChange(item.type)"
       >
+        {{ item.text }}</button
+      ><br />
+      <!-- baidu:<button
+        v-for="(item, i) in baiduSearchBtnList"
+        :key="i"
+        @click="handleBaiduSearchChange(item.type)"
+      >
         {{ item.text }}
-      </button>
+      </button> -->
     </div>
     <div class="content-wrap">
       <div v-for="(item, i) in list" :key="i" class="content-item">
@@ -55,6 +62,13 @@
         <button @click="confirm">确定</button>
       </div>
     </div>
+    <div class="link-list">
+      <ul>
+        <li v-for="(item, i) in linkList" :key="i">
+          <a :href="item.href">{{ item.name }}</a>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -66,6 +80,7 @@ export default {
     return {
       msg: '欢迎来到我的页面，我是靓仔',
       list: [],
+      linkList: config.linkList,
       show: false,
       formData: {
         icon: '',
@@ -76,6 +91,60 @@ export default {
       searchBtnList: [
         {
           text: '精确搜索',
+          type: '"'
+        },
+        {
+          text: '包含关键字网站',
+          type: ' inurl:'
+        },
+        {
+          text: '指定网站',
+          type: ' site:'
+        },
+        {
+          text: '或者',
+          type: ' OR:'
+        },
+        {
+          text: '缩小范围',
+          type: ' -'
+        },
+        {
+          text: '加大范围',
+          type: ' +'
+        },
+        {
+          text: '指定文件',
+          type: ' filetype:'
+        },
+        {
+          text: '指定标题',
+          type: ' intitle:'
+        },
+        {
+          text: '正文包含',
+          type: ' intext:'
+        },
+        {
+          text: '所有包含关键字',
+          type: ' allinurl:'
+        },
+        {
+          text: '所有包含标题',
+          type: ' allintitle:'
+        },
+        {
+          text: '缓存搜索',
+          type: ' cache:'
+        },
+        {
+          text: '所有包含标题',
+          type: ' allintitle:'
+        }
+      ],
+      baiduSearchBtnList: [
+        {
+          text: '指定标题',
           type: 1
         },
         {
@@ -83,19 +152,28 @@ export default {
           type: 2
         },
         {
-          text: '通配符搜索',
+          text: '指定url含参',
           type: 3
         },
         {
-          text: '缩小范围',
+          text: '精确搜索',
           type: 4
         },
         {
-          text: '文档搜索',
+          text: '缩小范围',
           type: 5
+        },
+        {
+          text: '文档搜索',
+          type: 6
+        },
+        {
+          text: '包含特定查询词',
+          type: 7
         }
       ],
-      searchInputFocus: false
+      searchInputFocus: false,
+      baseUrl: 'https://www.google.com/search?q='
     };
   },
   created() {
@@ -107,13 +185,17 @@ export default {
     window.addEventListener('keyup', this.keyup);
   },
   methods: {
-    handleSearchChange(type) {
+    handleSearch() {
+      location.href = this.baseUrl + this.value;
+    },
+    handleBaiduSearchChange(type) {
+      this.baseUrl = 'https://www.baidu.com/s?wd=';
       if (type === 1) {
-        const a = '"';
+        const a = 'intitle:';
         if (this.value.includes(a)) {
           return;
         }
-        this.value = a + this.value + a;
+        this.value = a + this.value;
       } else if (type === 2) {
         const a = ' site:';
         if (this.value.includes(a)) {
@@ -121,23 +203,50 @@ export default {
         }
         this.value = this.value + a;
       } else if (type === 3) {
-        const a = '*';
-        if (this.value.startWith(a)) {
+        const a = ' inurl:';
+        if (this.value.includes(a)) {
           return;
         }
-        this.value = a + this.value;
+        this.value = this.value + a;
       } else if (type === 4) {
+        const a = '"';
+        if (this.value.includes(a)) {
+          return;
+        }
+        this.value = a + this.value + a;
+      } else if (type === 5) {
         const a = ' -';
         if (this.value.includes(a)) {
           return;
         }
         this.value = this.value + a;
-      } else if (type === 5) {
+      } else if (type === 6) {
         const a = ' fileType:';
         if (this.value.includes(a)) {
           return;
         }
         this.value = this.value + a;
+      } else if (type === 7) {
+        const a = ' +';
+        if (this.value.includes(a)) {
+          return;
+        }
+        this.value = this.value + a;
+      }
+      this.focus();
+    },
+    handleSearchChange(type) {
+      this.baseUrl = 'https://www.google.com/search?q=';
+      if (type === '"') {
+        if (this.value.includes(type)) {
+          return;
+        }
+        this.value = type + this.value + type;
+      } else {
+        if (this.value.includes(type)) {
+          return;
+        }
+        this.value = this.value + type;
       }
       this.focus();
       console.log(this.value);
@@ -150,6 +259,11 @@ export default {
       if (e.keyCode === 191) {
         if (!this.searchInputFocus) {
           this.$refs.input.focus();
+        }
+      }
+      if (e.keyCode === 13) {
+        if (this.searchInputFocus) {
+          this.handleSearch();
         }
       }
     },
