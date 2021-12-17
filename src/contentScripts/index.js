@@ -6,7 +6,16 @@
 import './index.scss'
 // 'use strict';
 // const VERSION = "1.2.9";
-let performance_now = performance.now()
+let performance_now = performance.now(),
+  liListStr = '', // 链接列表字符串
+  linkObj = {},
+  rmad, // 链接对象 key是href
+  timer = null,
+  tiaozhuanFlag = true, // 跳转变量
+  runIndex = 0, // 运行次数
+  win = '',
+  ifMouseDownNoClick = false // 当键盘点击事件触发，不触发点击事件
+
 const {
   location
 } = window
@@ -22,26 +31,17 @@ const {
   error,
   dir
 } = console
-
-let liListStr = '', // 链接列表字符串
-  linkObj = {} // 链接对象 key是href
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
-let timer = null,
-  tiaozhuanFlag = true, // 跳转变量
-  runIndex = 0 // 运行次数
 
 function logInfo(msg) {
   log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
 }
-let win = ''
 if (window.top) {
   win = window.top
 } else {
   win = window
 }
 logInfo('Content script working...')
-
-let rmad
 
 function rmCommonAd() {
   const ad_key = [
@@ -354,6 +354,39 @@ function getDomList(str, filterClassList) {
   return arr
 }
 
+function mouseClick() {
+  // ctrl + space 实现点击鼠标所在位置
+  let target = null
+  // 从子孙往上找，直到找到可以点击的dom
+  function findParentClick(item) {
+    console.log(item, 'findParentClicK可点击的对象');
+    if ('click' in item) {
+      ifMouseDownNoClick = true
+      item.click()
+      setTimeout(() => {
+        ifMouseDownNoClick = false
+      }, 100)
+      return false
+    }
+    const parent = item.parentNode
+    findParentClick(parent)
+  }
+
+  window.addEventListener("pointermove", function (e) {
+    debounce(() => {
+      target = e.target
+      console.log(target.nodeName.toLowerCase(), target.classList, 'target');
+    })
+  });
+
+  window.addEventListener("keydown", function (e) {
+    const code = e.keyCode;
+    if (e.ctrlKey && code === 32) {
+      findParentClick(target)
+    }
+  });
+}
+
 const list = {
   'www.baidu.com': {
     callback: baidu,
@@ -511,6 +544,8 @@ function main() {
       (host === k && list[k].moreCase && list[k].moreCase()) ||
       (host === k && !list[k].moreCase)
     ) {
+      // 键盘点击事件
+      mouseClick()
       if (list[k].rehref) {
         location.href = list[k].rehref + pathname
         return false
@@ -552,7 +587,7 @@ function main() {
       }
 
       const callback = function (mutationsList, observer) {
-        console.log('回调执行-observer')
+        console.log('回调执行-observer', )
         list[k].callback(params)
       }
       const observer = new MutationObserver(callback)
@@ -795,14 +830,9 @@ function mdn({
   const lastUrlStr = urlStr.slice(index)
   const noChinese = document.querySelector('.page-content-container>h1')
   if (noChinese && noChinese.innerText.includes('Page not found')) {
-    if (href.includes(us)) {
-      window.history.back()
-      return
-    }
-    if (perUrlStr === lastUrlStr) {
-      return
-    }
-    location.href = mdn + us + lastUrlStr
+    // if (href.includes(us)) {
+    window.history.back()
+    return
   } else {
     const noChangeLanguageBtn = document.querySelector('.show-desktop')
     const selectDom = document.getElementById('language-selector')
@@ -932,6 +962,9 @@ function tiaozhuan(queryList, fn) {
   window.addEventListener('click', function (e) {
     let href = '',
       newHref = ''
+    // 键盘点击事件触发，就不触发这个。
+    if (ifMouseDownNoClick) return
+    console.log(' 键盘事件点击触发了这个方法');
     if (e.target.href) {
       href = e.target.href
     } else if (e.target.parentNode && e.target.parentNode.href) {
@@ -1216,58 +1249,6 @@ setTimeout(function () {
     tiaozhuan(targetList, (goLinkList[host] = noop))
   }
 
-  // ctrl + space 实现点击鼠标所在位置
-  const body = document.querySelector("body");
-  let point = {};
-  //获取页面上所有的dom节点
-  function getNodeList(body, nodeList = [], index = 0) {
-    const childrenList = [...body.children];
-    if (childrenList.length <= 0) {
-      return nodeList;
-    }
-    index++;
-    childrenList.forEach((item) => {
-      const filterNodeNameList = ['SCRIPT', 'STYLE', 'IFRAME']
-      if (filterNodeNameList.includes(item.nodeName)) return
-      const point = item.getBoundingClientRect();
-      nodeList.push({
-        node: item,
-        point,
-        index,
-      });
-      getNodeList(item, nodeList, index);
-    });
-  }
-  // 从子孙往上找，直到找到可以点击的dom
-  function findParentClick(item) {
-    console.log(item, 'findParentClicK可点击的对象');
-    if ('click' in item) {
-      item.click()
-      return false
-    }
-    const parent = item.parentNode
-    findParentClick(parent)
-  }
-
-  window.addEventListener("mousemove", function (e) {
-    debounce(() => {
-      point = {
-        x: e.clientX,
-        y: e.clientY,
-      };
-    })
-  });
-
-  // 获取所有元素
-  let nodeList = []
-
-  function getNodeListCallback() {
-    nodeList = []
-    getNodeList(body, nodeList);
-  }
-  const observer = new MutationObserver(getNodeListCallback)
-  observer.observe(document, config)
-
   window.addEventListener('visibilitychange', function (event) {
     if (document.hidden) return
     chrome.runtime.sendMessage({
@@ -1278,39 +1259,4 @@ setTimeout(function () {
     });
   });
 
-  window.addEventListener("keydown", function (e) {
-    const code = e.keyCode;
-    if (e.ctrlKey && code === 32) {
-      debounce(() => {
-        const chooseList = nodeList.filter((item) => inDom(item, point));
-        console.log(chooseList, nodeList, '-----chooseList-----');
-        const len = chooseList.length;
-        if (len === 0) return
-        let index = 0;
-        chooseList.forEach((item, i) => {
-          if (index < item.index) {
-            index = item.index;
-          }
-        });
-        const item = chooseList.find((item) => item.index === index);
-        findParentClick(item.node)
-      })
-    }
-  });
-
-  function inDom(node, point) {
-    const nodePoint = node.point;
-    if (node.node.classList.contains('account-list')) {
-      console.log(node, nodePoint, point, 'node');
-    }
-    if (
-      point.x >= nodePoint.x &&
-      point.x <= nodePoint.right &&
-      point.y >= nodePoint.y &&
-      point.y <= nodePoint.bottom
-    ) {
-      return true;
-    }
-    return false;
-  }
 }, 0)
