@@ -11,10 +11,10 @@ let performance_now = performance.now(),
   linkObj = {},
   rmad, // 链接对象 key是href
   timer = null,
-  tiaozhuanFlag = true, // 跳转变量
   runIndex = 0, // 运行次数
   win = '',
-  ifMouseDownNoClick = false // 当键盘点击事件触发，不触发点击事件
+  ifMouseDownNoClick = false, // 当键盘点击事件触发，不触发点击事件
+  target = null // 将要点击的目标元素
 
 const {
   location
@@ -317,7 +317,6 @@ function gotoLink(href) {
   a.href = href
   a.click()
   a.remove()
-  tiaozhuanFlag = false
 }
 const params = {
   href,
@@ -350,17 +349,28 @@ function getDomList(str, filterClassList) {
       filterIt.forEach(t => t.remove())
     })
   }
-  arr.forEach(it => console.log(it))
   return arr
 }
 
+// ctrl + space 实现点击鼠标所在位置
 function mouseClick() {
-  // ctrl + space 实现点击鼠标所在位置
-  let target = null
   // 从子孙往上找，直到找到可以点击的dom
   function findParentClick(item) {
     console.log(item, 'findParentClicK可点击的对象');
-    if ('click' in item) {
+    if (!item) return
+    // 获取元素上的监听事件
+    if (typeof getEventListeners === 'function') {
+      const listeners = getEventListeners(item)
+      if (listeners && listeners.click) {
+        ifMouseDownNoClick = true
+        item.click()
+        setTimeout(() => {
+          ifMouseDownNoClick = false
+        }, 100)
+        return false
+      }
+    } else if ('click' in item) {
+      // 拿不到监听的事件对象就看能否点击，能点击就点击
       ifMouseDownNoClick = true
       item.click()
       setTimeout(() => {
@@ -369,19 +379,31 @@ function mouseClick() {
       return false
     }
     const parent = item.parentNode
+    // 有a链接触发跳转
+    if (parent && parent.href) {
+      commonTiaozhuan(parent, true)
+      return
+    }
     findParentClick(parent)
   }
 
   window.addEventListener("pointermove", function (e) {
     debounce(() => {
       target = e.target
-      console.log(target.nodeName.toLowerCase(), target.classList, 'target');
+      console.log(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
     })
   });
 
   window.addEventListener("keydown", function (e) {
     const code = e.keyCode;
     if (e.ctrlKey && code === 32) {
+      // 有a链接触发跳转
+      if (target.href) {
+        console.log(target.href, 'target.href');
+        commonTiaozhuan(target, true)
+        return
+      }
+      // 没有a链接就点击
       findParentClick(target)
     }
   });
@@ -537,15 +559,12 @@ const config = {
 clearInterval(timer)
 
 function main() {
+  // 键盘点击事件
+  mouseClick()
   for (const k in list) {
     // console.log(host, k, "看看走的是哪一个");
 
-    if (
-      (host === k && list[k].moreCase && list[k].moreCase()) ||
-      (host === k && !list[k].moreCase)
-    ) {
-      // 键盘点击事件
-      mouseClick()
+    if (host === k) {
       if (list[k].rehref) {
         location.href = list[k].rehref + pathname
         return false
@@ -958,30 +977,48 @@ function github() {
 //  https://product.pconline.com.cn/ class: fixLeftQRcode  id:xuanfu_wapper
 
 // 所有跳转方法
-function tiaozhuan(queryList, fn) {
+function tiaozhuan() {
   window.addEventListener('click', function (e) {
-    let href = '',
-      newHref = ''
     // 键盘点击事件触发，就不触发这个。
     if (ifMouseDownNoClick) return
-    console.log(' 键盘事件点击触发了这个方法');
-    if (e.target.href) {
-      href = e.target.href
-    } else if (e.target.parentNode && e.target.parentNode.href) {
-      href = e.target.parentNode.href
-    }
-    const index = href.lastIndexOf('http')
-    if (index !== -1) {
-      newHref = href.slice(index)
-    }
-    // 判断是否为网址，是网址可以直接跳转
-    if (newHref && index !== href.indexOf('http')) {
-      // const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
-      const hrefStr = decodeURIComponent(newHref)
-      e.preventDefault()
-      gotoLink(hrefStr)
-    }
+    commonTiaozhuan(e)
   })
+}
+
+// 公共跳转方法
+function commonTiaozhuan(e, needGo) {
+  console.log(e, '有href的node元素', e.target);
+  let href = '',
+    newHref = '',
+    targetReal = null,
+    eventType = null
+  // a链接也有target属性，但是他的target是个字符串，点击事件的target是个元素
+  if (e && e.target && e.target.nodeName) {
+    targetReal = e.target
+    eventType = true
+  } else {
+    targetReal = e
+  }
+  if (targetReal.href) {
+    href = targetReal.href
+  } else if (targetReal.parentNode && targetReal.parentNode.href) {
+    href = targetReal.parentNode.href
+  }
+  const index = href.lastIndexOf('http')
+  if (index !== -1) {
+    newHref = href.slice(index)
+  }
+  // 判断是否为网址，是网址可以直接跳转
+  if (newHref && index !== href.indexOf('http')) {
+    // const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
+    const hrefStr = decodeURIComponent(newHref)
+    eventType && e.preventDefault()
+    gotoLink(hrefStr)
+  }
+  // 点击事件里不需要多次一举，键盘事件的点击需要
+  if (needGo) {
+    gotoLink(decodeURIComponent(newHref))
+  }
 }
 
 const vueFlag = vueAroundList.some(it => host === it)
@@ -1239,15 +1276,7 @@ setTimeout(function () {
     },
   }
 
-  if (tiaozhuanFlag) {
-    tiaozhuanFlag = false
-    const targetList = []
-    // if (goLinkList[host] && goLinkList[host].target) {
-    //   targetList.concat(goLinkList[host].target)
-    // }
-    // targetList.push('target=')
-    tiaozhuan(targetList, (goLinkList[host] = noop))
-  }
+  tiaozhuan()
 
   window.addEventListener('visibilitychange', function (event) {
     if (document.hidden) return
