@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-08 21:39:47
+ * @LastEditTime: 2021-12-19 18:28:10
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -104,6 +104,31 @@ chrome.contextMenus.create({
 
 console.log(chrome, 'chrome')
 
+// 去掉链接跳转时的中间过渡环节
+function hrefChange(href) {
+  let newHref = ''
+  const index = href.lastIndexOf('http')
+  if (index !== -1) {
+    newHref = href.slice(index)
+  }
+  return newHref
+}
+
+// 组装对象
+function zuZhuangObj(obj, linkList, key, value, i = 0) {
+  if (linkList.length === 0) return
+  if (!obj[linkList[i]]) {
+    obj[linkList[i]] = {}
+  }
+  if (i === linkList.length - 1) {
+    obj[linkList[i]][key] = value
+    return
+  } else {
+    i++
+    zuZhuangObj(obj[linkList[i - 1]] = {}, linkList, key, value, i)
+  }
+}
+
 chrome.runtime.onMessage.addListener(function notify(
   message,
   sender,
@@ -113,8 +138,11 @@ chrome.runtime.onMessage.addListener(function notify(
     ...linkObj,
     ...message.linkObj
   }
+  // 这种只分类一次
   const newLinkObj = {}
+  const newLinkObjPro = {}
   for (const k in linkObj) {
+    if (!k) continue
     const {
       origin
     } = new URL(k)
@@ -124,7 +152,15 @@ chrome.runtime.onMessage.addListener(function notify(
       newLinkObj[origin] = {}
     }
   }
-  console.log(linkObj, newLinkObj);
+  for (const href in linkObj) {
+    let newHref = hrefChange(href)
+    if (!newHref) {
+      newHref = href
+    }
+    const linkList = newHref.split('/').slice(2).filter(Boolean)
+    zuZhuangObj(newLinkObjPro, linkList, newHref, linkObj[href])
+  }
+  console.log(newLinkObj, newLinkObjPro, 'newLinkObjPro');
 });
 
 chrome.browserAction.onClicked.addListener(function () {

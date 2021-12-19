@@ -14,7 +14,8 @@ let performance_now = performance.now(),
   runIndex = 0, // 运行次数
   win = '',
   ifMouseDownNoClick = false, // 当键盘点击事件触发，不触发点击事件
-  target = null // 将要点击的目标元素
+  target = null, // 将要点击的目标元素
+  targetCssText = '' // 将要点击目标元素的样式
 
 const {
   location
@@ -259,22 +260,21 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
 function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   liListStr = ''
   const hrefList = []
-  const box = document.querySelector('.' + boxName)
-  if (customlinkStr) {
-    liListStr = customlinkStr
-  } else {
-    linkList.forEach(item => {
-      linkObj[item.toString()] = item.innerText
-      hrefList.push({
-        nodeName: 'a',
-        href: item.toString(),
-        text: item.innerText
-      })
-      liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
+  // const box = document.querySelector('.' + boxName)
+  // if (customlinkStr) {
+  //   liListStr = customlinkStr
+  // } else {
+  linkList.forEach((item, i) => {
+    linkObj[item.toString()] = item.innerText
+    hrefList.push({
+      nodeName: 'a',
+      href: item.toString(),
+      text: item.innerText
     })
-  }
+    liListStr += `<li title='${item.innerText}'><a href='${item.toString()}' rel="noopener noreferrer" target="_blank">${item.innerText}</a></li>\n`
+  })
+  // }
   if (!liListStr) return
-  // console.log(liListStr, 'liListStr---');
   chrome.runtime.sendMessage({
     liListStr,
     linkObj,
@@ -389,7 +389,13 @@ function mouseClick() {
 
   window.addEventListener("pointermove", function (e) {
     debounce(() => {
+      if (target) {
+        target.style.cssText = targetCssText
+      }
       target = e.target
+      targetCssText = e.target.style.cssText
+      console.log(targetCssText, 'targetCssText', 'pointermove');
+      e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
       console.log(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
     })
   });
@@ -426,6 +432,7 @@ const list = {
     callback: bilibili
   },
   'search.bilibili.com': {
+    // 执行函数
     callback: bilibili,
     nextStep: {
       // 分页按钮集合
@@ -561,10 +568,17 @@ clearInterval(timer)
 function main() {
   // 键盘点击事件
   mouseClick()
+  // 获取所有a链接
+  const callback = function (mutationsList, observer) {
+    addLinkListBox(getDomList('a'))
+  }
+  const observerGetLinks = new MutationObserver(callback)
+  observerGetLinks.observe(document, config)
   for (const k in list) {
     // console.log(host, k, "看看走的是哪一个");
 
     if (host === k) {
+      // 英文调中文网站
       if (list[k].rehref) {
         location.href = list[k].rehref + pathname
         return false
@@ -637,14 +651,14 @@ function gitlab() {
 
 // 今日头条
 function toutiao() {
-  const linkList = [...getDomList('.s-result-list .cs-view-block .text-darker a'), ...getDomList('.sldebar_out .silebar_inner li a')]
-  addLinkListBox(linkList, 'toutiao-toolbox')
+  // const linkList = [...getDomList('.s-result-list .cs-view-block .text-darker a'), ...getDomList('.sldebar_out .silebar_inner li a')]
+  // addLinkListBox(linkList)
 }
 
 // 张鑫旭官网
 function zhangxinxu() {
-  const linkList = [...getDomList('#content .status-publish h2 a'), ...getDomList('.sldebar_out .silebar_inner li a')]
-  addLinkListBox(linkList, 'zhangxinxu-toolbox')
+  // const linkList = [...getDomList('#content .status-publish h2 a'), ...getDomList('.sldebar_out .silebar_inner li a')]
+  // addLinkListBox(linkList, 'zhangxinxu-toolbox')
 }
 
 // 斗鱼
@@ -828,8 +842,8 @@ function csdn() {}
 function youtube() {
   setStyle('.html5-video-player', 'display: block')
   videoPlay()
-  const linkList = [...getDomList('.ytd-rich-grid-renderer #meta #video-title-link'), ...getDomList('.ytd-watch-next-secondary-results-renderer #dismissible .metadata a')]
-  addLinkListBox(linkList, 'youtube-toolbox')
+  // const linkList = [...getDomList('.ytd-rich-grid-renderer #meta #video-title-link'), ...getDomList('.ytd-watch-next-secondary-results-renderer #dismissible .metadata a')]
+  // addLinkListBox(linkList, 'youtube-toolbox')
 }
 
 function mdn({
@@ -886,22 +900,22 @@ function zhihu({
   win.addEventListener('scroll', function scroll() {
     throlleRemove(adClassList, '.')
   })
-  const includesList = ['web', 'js', 'javascript', 'node', 'npm', 'github', 'jquery', 'css', 'html', '音视频', '前端', 'vue', 'react', 'nginx', 'webpack', 'http', 'websocket', 'ts', 'typescript', 'chrome', 'linux', 'iframe', 'electron']
-  const root = document.querySelector('#root')
-  let linkList = Array.from(root.querySelectorAll('a'))
-  linkList = linkList.filter(link => {
-    console.log(link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText), '--------');
-    return includesList.some(item => (link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText) || "").toLowerCase().includes(item))
-  })
-  addLinkListBox(linkList, 'zhihu-toolbox')
+  // const includesList = ['web', 'js', 'javascript', 'node', 'npm', 'github', 'jquery', 'css', 'html', '音视频', '前端', 'vue', 'react', 'nginx', 'webpack', 'http', 'websocket', 'ts', 'typescript', 'chrome', 'linux', 'iframe', 'electron']
+  // const root = document.querySelector('#root')
+  // let linkList = Array.from(root.querySelectorAll('a'))
+  // linkList = linkList.filter(link => {
+  //   console.log(link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText), '--------');
+  //   return includesList.some(item => (link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText) || "").toLowerCase().includes(item))
+  // })
+  // addLinkListBox(linkList, 'zhihu-toolbox')
 }
 
 function juejin() {
   // setStyle('.article-suspended-panel.article-suspended-panel', 'right: 17rem;margin-right:unset')
   // setStyle('.article-catalog', 'overflow-y:auto;height:calc(100vh - 100px)')
   rmSomeSelf('.entry-list>.item', '.tag')
-  const linkList = [...getDomList('.content-wrapper .title-row a'), ...getDomList('.result-list .item .title-row a')]
-  addLinkListBox(linkList, 'juejin-toolbox')
+  // const linkList = [...getDomList('.content-wrapper .title-row a'), ...getDomList('.result-list .item .title-row a')]
+  // addLinkListBox(linkList, 'juejin-toolbox')
 }
 // 简书
 function jianshu() {
@@ -910,37 +924,37 @@ function jianshu() {
   Array.from(c).forEach(it => it.remove())
 
   // setStyle('._3Pnjry', 'right: 200px;left:unset')
-  const linkList = [...getDomList('._1iTR78 .em6wEs>a'), ...getDomList('.itemlist-box .content>a'), ...getDomList('._3Z3nHf ._26Hhi2 a'), ...getDomList('._3Z3nHf .cuOxAY a')]
-  addLinkListBox(linkList, 'jianshu-toolbox')
+  // const linkList = [...getDomList('._1iTR78 .em6wEs>a'), ...getDomList('.itemlist-box .content>a'), ...getDomList('._3Z3nHf ._26Hhi2 a'), ...getDomList('._3Z3nHf .cuOxAY a')]
+  // addLinkListBox(linkList, 'jianshu-toolbox')
 }
 // 思否
 function sifou() {
   // setStyle('.d-none.col-2', 'position:fixed!important;right:0;')
-  const linkList = [...getDomList('.content-list-wrap .list-group-flush .list-group-item h5 a'), ...getDomList('.article-content h3 a')]
-  addLinkListBox(linkList, 'sifou-toolbox')
+  // const linkList = [...getDomList('.content-list-wrap .list-group-flush .list-group-item h5 a'), ...getDomList('.article-content h3 a')]
+  // addLinkListBox(linkList, 'sifou-toolbox')
 }
 
 // google
 function google() {
-  const linkList = [...getDomList('.g .yuRUbf>a')]
-  addLinkListBox(linkList, 'google-toolbox')
+  // const linkList = [...getDomList('.g .yuRUbf>a')]
+  // addLinkListBox(linkList, 'google-toolbox')
 }
 // 博客园
 function bokeyuan() {
   // setStyle('#main_content', 'max-width:1200px;margin:auto')
   // setStyle('#post_list', 'width: 800px')
-  const linkList = [...getDomList('#post_list .post-item .post-item-title'), ...getDomList('#side_right .item-list a')]
-  addLinkListBox(linkList, 'bokeyuan-toolbox')
+  // const linkList = [...getDomList('#post_list .post-item .post-item-title'), ...getDomList('#side_right .item-list a')]
+  // addLinkListBox(linkList, 'bokeyuan-toolbox')
 }
 // 摸摸鱼
 function momoyu() {
-  const linkList = [...getDomList('.content .hot-outer ul li a')]
-  addLinkListBox(linkList, 'momoyu-toolbox')
+  // const linkList = [...getDomList('.content .hot-outer ul li a')]
+  // addLinkListBox(linkList, 'momoyu-toolbox')
 }
 // 小刀娱乐网
 function xiaodao() {
-  const linkList = [...getDomList('#CommonListCell .post-list .post-title a'), ...getDomList('.LanMu_WenZhangCeBianLan ul li a')]
-  addLinkListBox(linkList, 'xiaodao-toolbox')
+  // const linkList = [...getDomList('#CommonListCell .post-list .post-title a'), ...getDomList('.LanMu_WenZhangCeBianLan ul li a')]
+  // addLinkListBox(linkList, 'xiaodao-toolbox')
 }
 
 function lodash({
@@ -985,6 +999,16 @@ function tiaozhuan() {
   })
 }
 
+// 旧链接拿到新链接，没有返回 '
+function hrefChange(href) {
+  let newHref = ''
+  const index = href.lastIndexOf('http')
+  if (index !== -1) {
+    newHref = href.slice(index)
+  }
+  return newHref
+}
+
 // 公共跳转方法
 function commonTiaozhuan(e, needGo) {
   console.log(e, '有href的node元素', e.target);
@@ -1004,12 +1028,13 @@ function commonTiaozhuan(e, needGo) {
   } else if (targetReal.parentNode && targetReal.parentNode.href) {
     href = targetReal.parentNode.href
   }
-  const index = href.lastIndexOf('http')
-  if (index !== -1) {
-    newHref = href.slice(index)
-  }
+  // const index = href.lastIndexOf('http')
+  // if (index !== -1) {
+  //   newHref = href.slice(index)
+  // }
+  newHref = hrefChange(href)
   // 判断是否为网址，是网址可以直接跳转
-  if (newHref && index !== href.indexOf('http')) {
+  if (newHref) {
     // const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
     const hrefStr = decodeURIComponent(newHref)
     eventType && e.preventDefault()
