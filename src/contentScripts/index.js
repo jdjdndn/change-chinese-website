@@ -34,6 +34,13 @@ const {
 } = console
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 
+const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
+const needChange = otherSiteHref(href)
+if (needChange) {
+  location.replace(hrefChange(href))
+}
+
+
 function logInfo(msg) {
   log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
 }
@@ -118,7 +125,7 @@ rmCommonAd()
 
 function noop() {}
 
-function debounce(fn, delay = 300) {
+function debounce(fn, delay = 50) {
   if (timer) {
     clearTimeout(timer);
   }
@@ -380,10 +387,10 @@ function mouseClick() {
     }
     const parent = item.parentNode
     // 有a链接触发跳转
-    if (parent && parent.href) {
-      commonTiaozhuan(parent, true)
-      return
-    }
+    // if (parent && parent.href) {
+    //   commonTiaozhuan(parent, true)
+    //   return
+    // }
     findParentClick(parent)
   }
 
@@ -404,11 +411,11 @@ function mouseClick() {
     const code = e.keyCode;
     if (e.ctrlKey && code === 32) {
       // 有a链接触发跳转
-      if (target.href) {
-        console.log(target.href, 'target.href');
-        commonTiaozhuan(target, true)
-        return
-      }
+      // if (target.href) {
+      //   console.log(target.href, 'target.href');
+      //   commonTiaozhuan(target, true)
+      //   return
+      // }
       // 没有a链接就点击
       findParentClick(target)
     }
@@ -992,21 +999,25 @@ function github() {
 
 // 所有跳转方法
 function tiaozhuan() {
-  window.addEventListener('click', function (e) {
-    // 键盘点击事件触发，就不触发这个。
-    if (ifMouseDownNoClick) return
-    commonTiaozhuan(e)
-  })
+  // window.addEventListener('click', function (e) {
+  //   // 键盘点击事件触发，就不触发这个。
+  //   if (ifMouseDownNoClick) return
+  //   commonTiaozhuan(e)
+  // })
 }
 
 // 旧链接拿到新链接，没有返回 '
 function hrefChange(href) {
   let newHref = ''
-  const index = href.lastIndexOf('http')
-  if (index !== -1) {
-    newHref = href.slice(index)
+  if (otherSiteHref(href)) {
+    newHref = href.slice(href.lastIndexOf('http'))
   }
-  return newHref
+  return decodeURIComponent(newHref)
+}
+
+// 判断网址是否需要跳转
+function otherSiteHref(href) {
+  return href.indexOf('http') !== href.lastIndexOf('http')
 }
 
 // 公共跳转方法
@@ -1035,7 +1046,6 @@ function commonTiaozhuan(e, needGo) {
   newHref = hrefChange(href)
   // 判断是否为网址，是网址可以直接跳转
   if (newHref) {
-    // const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
     const hrefStr = decodeURIComponent(newHref)
     eventType && e.preventDefault()
     gotoLink(hrefStr)
@@ -1287,20 +1297,6 @@ setTimeout(function () {
 }, 0)
 
 setTimeout(function () {
-  // 需要指定 跳转分隔符 的列表
-  const goLinkList = {
-    'www.yyyweb.com': {
-      callback: yyywebClick,
-    },
-    'www.jianshu.com': {
-      target: ['url='],
-    },
-    // 知乎专栏
-    'zhuanlan.zhihu.com': {
-      target: ['?t='], // 优先级高于target
-    },
-  }
-
   tiaozhuan()
 
   window.addEventListener('visibilitychange', function (event) {
