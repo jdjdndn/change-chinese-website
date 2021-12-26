@@ -35,7 +35,7 @@ const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 
 const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
 const needChange = otherSiteHref(href)
-const noChange = ['iflytek'].some(it => href.includes(it))
+const noChange = ['iflytek', 'zhixue'].some(it => href.includes(it))
 if (needChange && !noChange) {
   location.replace(hrefChange(href))
 }
