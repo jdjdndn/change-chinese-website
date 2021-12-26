@@ -14,7 +14,8 @@ let performance_now = performance.now(),
   runIndex = 0, // 运行次数
   win = '',
   target = null, // 将要点击的目标元素
-  targetCssText = '' // 将要点击目标元素的样式
+  targetCssText = '', // 将要点击目标元素的样式
+  errorBox = document.createElement('div') // 错误信息展示盒子
 
 const {
   location
@@ -33,13 +34,75 @@ const {
 } = console
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 
-const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
+const hrefReg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
 const needChange = otherSiteHref(href)
-const noChange = ['iflytek', 'zhixue'].some(it => href.includes(it))
+const noChange = ['iflytek', 'zhixue'].some(it => host.includes(it))
 if (needChange && !noChange) {
   location.replace(hrefChange(href))
 }
+// 错误监听
+errListening()
 
+function errListening() {
+  errorBox.classList.add('yucheng-error-box')
+  document.body.appendChild(errorBox)
+  errorBox.addEventListener('keyup', (e) => {
+    if (e.keyCode === 13) {
+      errorBox.style.display = 'none'
+    }
+  })
+  // 监听 js 错误
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    let string = msg.toLowerCase();
+    let substring = "script error";
+    let info = ''
+    if (string.indexOf(substring) > -1) {
+      info = 'Script Error: See Browser Console for Detail'
+    } else {
+      let message = [
+        'Message: ' + msg,
+        'URL: ' + url,
+        'Line: ' + lineNo,
+        'Column: ' + columnNo,
+        'Error object: ' + JSON.stringify(error)
+      ].join(' - ');
+
+      info = message
+    }
+    errorBox.innerHTML = info
+    errorBox.style.display = 'block'
+    setTimeout(() => {
+      errorBox.style.display = 'none'
+    }, 2000)
+    return false;
+  };
+
+  // 监听 promise 错误 缺点是获取不到列数据
+  window.addEventListener('unhandledrejection', e => {
+    // alert('promise error', e.reason)
+    errorBox.innerHTML = 'promise error'
+    errorBox.style.display = 'block'
+    setTimeout(() => {
+      errorBox.style.display = 'none'
+    }, 2000)
+  })
+}
+
+// 捕获资源加载失败错误 js css img...
+window.addEventListener('error', e => {
+  debounce(() => {
+    const target = e.target
+    console.log(e.target, e.message);
+    if (!target) return
+    if (target.src || target.href) {
+      errorBox.innerHTML = '资源加载失败错误'
+      errorBox.style.display = 'block'
+      setTimeout(() => {
+        errorBox.style.display = 'none'
+      }, 2000)
+    }
+  })
+}, true)
 
 function logInfo(msg) {
   log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
