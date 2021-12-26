@@ -13,7 +13,6 @@ let performance_now = performance.now(),
   timer = null,
   runIndex = 0, // 运行次数
   win = '',
-  ifMouseDownNoClick = false, // 当键盘点击事件触发，不触发点击事件
   target = null, // 将要点击的目标元素
   targetCssText = '' // 将要点击目标元素的样式
 
@@ -36,7 +35,8 @@ const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 
 const reg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
 const needChange = otherSiteHref(href)
-if (needChange) {
+const noChange = ['iflytek'].some(it => href.includes(it))
+if (needChange && !noChange) {
   location.replace(hrefChange(href))
 }
 
@@ -123,9 +123,7 @@ function rmCommonAd() {
 }
 rmCommonAd()
 
-function noop() {}
-
-function debounce(fn, delay = 50) {
+function debounce(fn, delay = 16) {
   if (timer) {
     clearTimeout(timer);
   }
@@ -182,7 +180,7 @@ function setStyle(str, css) {
   }
 }
 // 节流
-function throttle(fun, delay) {
+function throttle(fun, delay = 50) {
   let last
   let deferTimer
   return function (...args) {
@@ -369,29 +367,21 @@ function mouseClick() {
     if (typeof getEventListeners === 'function') {
       const listeners = getEventListeners(item)
       if (listeners && listeners.click) {
-        ifMouseDownNoClick = true
         item.click()
-        setTimeout(() => {
-          ifMouseDownNoClick = false
-        }, 100)
         return false
       }
     } else if ('click' in item) {
       // 拿不到监听的事件对象就看能否点击，能点击就点击
-      ifMouseDownNoClick = true
       item.click()
-      setTimeout(() => {
-        ifMouseDownNoClick = false
-      }, 100)
       return false
     }
     const parent = item.parentNode
+    findParentClick(parent)
     // 有a链接触发跳转
     // if (parent && parent.href) {
     //   commonTiaozhuan(parent, true)
     //   return
     // }
-    findParentClick(parent)
   }
 
   window.addEventListener("pointermove", function (e) {
@@ -401,7 +391,6 @@ function mouseClick() {
       }
       target = e.target
       targetCssText = e.target.style.cssText
-      console.log(targetCssText, 'targetCssText', 'pointermove');
       e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
       console.log(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
     })
@@ -837,6 +826,7 @@ function hu4tv() {
     'popBox',
     'maskBox',
   ]
+  setStyle('body', 'overflow:auto')
   removeArrList(adList, '#')
   if (pathname !== '/') {
     $$('.wrap').length === 6 && $$('.wrap')[0].remove()

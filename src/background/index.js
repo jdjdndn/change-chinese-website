@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-19 18:28:10
+ * @LastEditTime: 2021-12-25 12:57:32
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -104,29 +104,18 @@ chrome.contextMenus.create({
 
 console.log(chrome, 'chrome')
 
-// 去掉链接跳转时的中间过渡环节
+// 旧链接拿到新链接，没有返回 ''
 function hrefChange(href) {
   let newHref = ''
-  const index = href.lastIndexOf('http')
-  if (index !== -1) {
-    newHref = href.slice(index)
+  if (otherSiteHref(href)) {
+    newHref = href.slice(href.lastIndexOf('http'))
   }
-  return newHref
+  return decodeURIComponent(newHref)
 }
 
-// 组装对象
-function zuZhuangObj(obj, linkList, key, value, i = 0) {
-  if (linkList.length === 0) return
-  if (!obj[linkList[i]]) {
-    obj[linkList[i]] = {}
-  }
-  if (i === linkList.length - 1) {
-    obj[linkList[i]][key] = value
-    return
-  } else {
-    i++
-    zuZhuangObj(obj[linkList[i - 1]] = {}, linkList, key, value, i)
-  }
+// 判断网址是否需要跳转
+function otherSiteHref(href) {
+  return href.indexOf('http') !== href.lastIndexOf('http')
 }
 
 chrome.runtime.onMessage.addListener(function notify(
@@ -140,7 +129,6 @@ chrome.runtime.onMessage.addListener(function notify(
   }
   // 这种只分类一次
   const newLinkObj = {}
-  const newLinkObjPro = {}
   for (const k in linkObj) {
     if (!k) continue
     const {
@@ -152,15 +140,7 @@ chrome.runtime.onMessage.addListener(function notify(
       newLinkObj[origin] = {}
     }
   }
-  for (const href in linkObj) {
-    let newHref = hrefChange(href)
-    if (!newHref) {
-      newHref = href
-    }
-    const linkList = newHref.split('/').slice(2).filter(Boolean)
-    zuZhuangObj(newLinkObjPro, linkList, newHref, linkObj[href])
-  }
-  console.log(newLinkObj, newLinkObjPro, 'newLinkObjPro');
+  console.log(newLinkObj, linkObj);
 });
 
 chrome.browserAction.onClicked.addListener(function () {
