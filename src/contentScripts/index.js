@@ -86,23 +86,23 @@ function errListening() {
       errorBox.style.display = 'none'
     }, 2000)
   })
-}
 
-// 捕获资源加载失败错误 js css img...
-window.addEventListener('error', e => {
-  debounce(() => {
-    const target = e.target
-    console.log(e.target, e.message);
-    if (!target) return
-    if (target.src || target.href) {
-      errorBox.innerHTML = '资源加载失败错误'
-      errorBox.style.display = 'block'
-      setTimeout(() => {
-        errorBox.style.display = 'none'
-      }, 2000)
-    }
-  })
-}, true)
+  // 捕获资源加载失败错误 js css img...
+  window.addEventListener('error', e => {
+    debounce(() => {
+      const target = e.target
+      console.log(e.target, e.message);
+      if (!target) return
+      if (target.src || target.href) {
+        errorBox.innerHTML = '资源加载失败错误'
+        errorBox.style.display = 'block'
+        setTimeout(() => {
+          errorBox.style.display = 'none'
+        }, 2000)
+      }
+    })
+  }, true)
+}
 
 function logInfo(msg) {
   log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
