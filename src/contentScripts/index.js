@@ -15,7 +15,8 @@ let performance_now = performance.now(),
   win = '',
   target = null, // 将要点击的目标元素
   targetCssText = '', // 将要点击目标元素的样式
-  errorBox = document.createElement('div') // 错误信息展示盒子
+  errorBox = document.createElement('div'), // 错误信息展示盒子
+  configParams = {} // popup配置参数
 
 const {
   location
@@ -34,9 +35,29 @@ const {
 } = console
 const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
 
+// 获取配置参数
+chrome.storage.sync.get(['configParams'], function (result) {
+  configParams = {
+    ...configParams,
+    ...result.configParams
+  }
+  logInfo(result, configParams, 'storage-get');
+});
+
+if (typeof chrome.app.isInstalled !== 'undefined') {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    configParams = {
+      ...configParams,
+      ...request
+    }
+    logInfo(request, configParams, 'configParams');
+    sendResponse('我收到了你的情书，popup~')
+  })
+}
+
 const hrefReg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
 const needChange = otherSiteHref(href)
-const noChange = ['iflytek', 'zhixue'].some(it => host.includes(it))
+const noChange = (configParams.noChangeHrefList || []).some(it => host.includes(it))
 if (needChange && !noChange) {
   location.replace(hrefChange(href))
 }
@@ -91,7 +112,7 @@ function errListening() {
   window.addEventListener('error', e => {
     debounce(() => {
       const target = e.target
-      console.log(e.target, e.message);
+      logInfo(e.target, e.message);
       if (!target) return
       if (target.src || target.href) {
         errorBox.innerHTML = '资源加载失败错误'
@@ -105,7 +126,10 @@ function errListening() {
 }
 
 function logInfo(msg) {
-  log(`%c${msg}`, 'background-color: yellow; font-size: 16px;')
+  if (!configParams.debug) return false
+  // const msgInfo = JSON.stringify(msg)
+  // log(`%c${msgInfo}`, 'background-color: yellow; font-size: 16px;')
+  log(msg);
 }
 if (window.top) {
   win = window.top
@@ -315,7 +339,7 @@ function rmSomeSelf(father, child, lsit = [], flag = true) {
     } else {
       lsit.forEach(includes => {
         const str = includes.toLowerCase()
-        console.log(parent.querySelector(child), '-------------------');
+        logInfo(parent.querySelector(child), '-------------------');
         if (parent.querySelector(child) && !parent.querySelector(child).innerText.includes(str)) {
           parent.remove()
         }
@@ -343,13 +367,17 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   })
   // }
   if (!liListStr) return
-  chrome.runtime.sendMessage({
-    liListStr,
-    linkObj,
-    hrefList
-  }, function (response) {
-    console.log(response, 'content-script');
-  });
+  debounce(() => {
+    if (typeof chrome.app.isInstalled !== 'undefined') {
+      chrome.runtime.sendMessage({
+        liListStr,
+        linkObj,
+        hrefList
+      }, function (response) {
+        logInfo(response, 'content-script');
+      });
+    }
+  })
 }
 // 将一个dom元素下的一个a标签放进一行li中或者多个a放进一个li
 // linkList为页面上a元素的父亲的集合
@@ -424,7 +452,7 @@ function getDomList(str, filterClassList) {
 function mouseClick() {
   // 从子孙往上找，直到找到可以点击的dom
   function findParentClick(item) {
-    console.log(item, 'findParentClicK可点击的对象');
+    logInfo(item, 'findParentClicK可点击的对象');
     if (!item) return
     // 获取元素上的监听事件
     if (typeof getEventListeners === 'function') {
@@ -449,13 +477,16 @@ function mouseClick() {
 
   window.addEventListener("pointermove", function (e) {
     debounce(() => {
-      if (target) {
-        target.style.cssText = targetCssText
+      if (configParams.changeEleMiaoBian) {
+        if (target) {
+          target.style.cssText = targetCssText
+        }
+        target = e.target
+        targetCssText = e.target.style.cssText
+        e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
       }
-      target = e.target
-      targetCssText = e.target.style.cssText
-      e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
-      console.log(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
+      if (!target || !target.nodeName || !target.classList || target.innerText === '') return false
+      logInfo(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
     })
   });
 
@@ -464,7 +495,7 @@ function mouseClick() {
     if (e.ctrlKey && code === 32) {
       // 有a链接触发跳转
       // if (target.href) {
-      //   console.log(target.href, 'target.href');
+      //   logInfo(target.href, 'target.href');
       //   commonTiaozhuan(target, true)
       //   return
       // }
@@ -634,7 +665,7 @@ function main() {
   const observerGetLinks = new MutationObserver(callback)
   observerGetLinks.observe(document, config)
   for (const k in list) {
-    // console.log(host, k, "看看走的是哪一个");
+    // logInfo(host, k, "看看走的是哪一个");
 
     if (host === k) {
       // 英文调中文网站
@@ -679,7 +710,7 @@ function main() {
       }
 
       const callback = function (mutationsList, observer) {
-        console.log('回调执行-observer', )
+        logInfo('回调执行-observer', )
         list[k].callback(params)
       }
       const observer = new MutationObserver(callback)
@@ -964,7 +995,7 @@ function zhihu({
   // const root = document.querySelector('#root')
   // let linkList = Array.from(root.querySelectorAll('a'))
   // linkList = linkList.filter(link => {
-  //   console.log(link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText), '--------');
+  //   logInfo(link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText), '--------');
   //   return includesList.some(item => (link.innerText || ('innerText' in link.firstElementChild && link.firstElementChild.innerText) || "").toLowerCase().includes(item))
   // })
   // addLinkListBox(linkList, 'zhihu-toolbox')
@@ -1075,7 +1106,7 @@ function otherSiteHref(href) {
 
 // 公共跳转方法
 function commonTiaozhuan(e, needGo) {
-  console.log(e, '有href的node元素', e.target);
+  logInfo(e, '有href的node元素', e.target);
   let href = '',
     newHref = '',
     targetReal = null,
@@ -1354,12 +1385,14 @@ setTimeout(function () {
 
   window.addEventListener('visibilitychange', function (event) {
     if (document.hidden) return
-    chrome.runtime.sendMessage({
-      liListStr,
-      linkObj
-    }, function (response) {
-      console.log(response, 'content-script');
-    });
+    if (typeof chrome.app.isInstalled !== 'undefined') {
+      chrome.runtime.sendMessage({
+        liListStr,
+        linkObj
+      }, function (response) {
+        logInfo(response, 'content-script');
+      });
+    }
   });
 
 }, 0)
