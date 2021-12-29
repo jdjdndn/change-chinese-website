@@ -452,7 +452,7 @@ function getDomList(str, filterClassList) {
 function mouseClick() {
   // 从子孙往上找，直到找到可以点击的dom
   function findParentClick(item) {
-    logInfo(item, 'findParentClicK可点击的对象');
+    // logInfo(item, 'findParentClicK可点击的对象');
     if (!item) return
     // 获取元素上的监听事件
     if (typeof getEventListeners === 'function') {
@@ -481,7 +481,9 @@ function mouseClick() {
         if (target) {
           target.style.cssText = targetCssText
         }
-        target = e.target
+      }
+      target = e.target
+      if (configParams.changeEleMiaoBian) {
         targetCssText = e.target.style.cssText
         e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
       }
