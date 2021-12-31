@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-30 21:57:12
+ * @LastEditTime: 2021-12-31 19:20:59
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -49,7 +49,7 @@ export default {
     return {
       msg: 'Welcome!--popup',
       changeEleMiaoBian: false, // 是否开启移入元素加样式
-      noChangeHrefList: ['iflytek', 'zhixue'], // 不跳转其他url列表
+      noChangeHrefList: ['iflytek', 'zhixue', 'localhost'], // 不跳转其他url列表
       debug: false // 调试模式
     };
   },
@@ -58,12 +58,10 @@ export default {
     // 获取配置参数
     chrome.storage.sync.get(['configParams'], function (result) {
       that.result = result.configParams;
-      // that.changeEleMiaoBian = that.result.changeEleMiaoBian || false;
-      // that.noChangeHrefList = that.result.noChangeHrefList;
-      that._data = {
-        ...that._data,
-        ...that.result
-      };
+      const { changeEleMiaoBian, noChangeHrefList, debug } = that.result;
+      that.changeEleMiaoBian = changeEleMiaoBian || that.changeEleMiaoBian;
+      that.noChangeHrefList = noChangeHrefList || that.noChangeHrefList;
+      that.debug = debug || that.debug;
       console.log(that, 'that');
     });
   },

@@ -61,19 +61,42 @@ const noChange = (configParams.noChangeHrefList || []).some(it => host.includes(
 if (needChange && !noChange) {
   location.replace(hrefChange(href))
 }
+
 // 错误监听
 errListening()
 
 function errListening() {
+  const script = document.createElement("script");
+  script.className = 'yucheng-error-record'
+  script.innerHTML = `
+  let errorBox = document.createElement('div'),timer = null,delay=3000,{log} = console,onerror = window.onerror
   errorBox.classList.add('yucheng-error-box')
   document.body.appendChild(errorBox)
-  errorBox.addEventListener('keyup', (e) => {
+  window.addEventListener('keyup', (e) => {
     if (e.keyCode === 13) {
+      clearTimeout(timer);
       errorBox.style.display = 'none'
     }
   })
+
+  function debounce(fn, delay = 16) {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(fn, delay);
+  }
+
+  function boxInfo(info) {
+    errorBox.innerHTML = info
+    errorBox.style.display = 'block'
+    setTimeout(() => {
+      errorBox.style.display = 'none'
+    }, delay)
+  }
+
   // 监听 js 错误
   window.onerror = function (msg, url, lineNo, columnNo, error) {
+    if(onerror) {onerror()}
     let string = msg.toLowerCase();
     let substring = "script error";
     let info = ''
@@ -81,50 +104,69 @@ function errListening() {
       info = 'Script Error: See Browser Console for Detail'
     } else {
       let message = [
-        'Message: ' + msg,
-        'URL: ' + url,
-        'Line: ' + lineNo,
-        'Column: ' + columnNo,
+        'Message: ' + msg + '<br/>' +
+        'URL: ' + url + '<br/>' +
+        'Line: ' + lineNo + '<br/>' +
+        'Column: ' + columnNo + '<br/>' +
         'Error object: ' + JSON.stringify(error)
       ].join(' - ');
 
       info = message
     }
-    errorBox.innerHTML = info
-    errorBox.style.display = 'block'
-    setTimeout(() => {
-      errorBox.style.display = 'none'
-    }, 2000)
-    return false;
+    boxInfo(info)
   };
 
   // 监听 promise 错误 缺点是获取不到列数据
   window.addEventListener('unhandledrejection', e => {
-    // alert('promise error', e.reason)
-    errorBox.innerHTML = 'promise error'
-    errorBox.style.display = 'block'
-    setTimeout(() => {
-      errorBox.style.display = 'none'
-    }, 2000)
+    boxInfo('promise error'+e.reason)
   })
 
   // 捕获资源加载失败错误 js css img...
   window.addEventListener('error', e => {
     debounce(() => {
-      const target = e.target
-      logInfo(e.target, e.message);
-      if (!target) return
-      if (target.src || target.href) {
-        errorBox.innerHTML = '资源加载失败错误'
-        errorBox.style.display = 'block'
-        setTimeout(() => {
-          errorBox.style.display = 'none'
-        }, 2000)
-      }
+      boxInfo(JSON.stringify(e))
     })
   }, true)
+  // 监听请求错误
+  function ajaxEventTrigger(event) {
+    var ajaxEvent = new CustomEvent(event, { detail: this });
+    window.dispatchEvent(ajaxEvent);
+  }
+  let oldXHR = window.XMLHttpRequest;
+    function newXHR() {
+      var realXHR = new oldXHR();
+      realXHR.addEventListener('abort', function () { ajaxEventTrigger.call(this, 'ajaxAbort'); }, false);
+      realXHR.addEventListener('error', function () { ajaxEventTrigger.call(this, 'ajaxError'); }, false);
+      realXHR.addEventListener('load', function () { ajaxEventTrigger.call(this, 'ajaxLoad'); }, false);
+      realXHR.addEventListener('loadstart', function () { ajaxEventTrigger.call(this, 'ajaxLoadStart'); }, false);
+      realXHR.addEventListener('progress', function () { ajaxEventTrigger.call(this, 'ajaxProgress'); }, false);
+      realXHR.addEventListener('timeout', function () { ajaxEventTrigger.call(this, 'ajaxTimeout'); }, false);
+      realXHR.addEventListener('loadend', function () { ajaxEventTrigger.call(this, 'ajaxLoadEnd'); }, false);
+      realXHR.addEventListener('readystatechange', function() { ajaxEventTrigger.call(this, 'ajaxReadyStateChange'); }, false);
+      return realXHR;
+    }
+    window.XMLHttpRequest = newXHR;
+  window.addEventListener('ajaxReadyStateChange', function (e) {
+    const status = String(e.detail.status)
+    if(!status.startsWith('2') && (e.detail.responseText || e.detail.responseURL) ) {
+      const info = '错误码：'+e.detail.status +'，错误信息：'+ e.detail.responseText+'，错误url:'+e.detail.responseURL
+      boxInfo(info)
+    }
+  });
+  window.addEventListener('ajaxAbort', function (e) {
+    if(e.detail.responseText || e.detail.responseURL) {
+      const info = '错误码：'+e.detail.status +'，错误信息：'+ e.detail.responseText+'，错误url:'+e.detail.responseURL
+      boxInfo(info)
+    }
+  });
+  `
+  document.head.appendChild(script)
 }
 
+// var original_xhr = XMLHttpRequest;
+// XMLHttpRequest = function () {
+//   new original_xhr();
+// }
 function logInfo(msg) {
   if (!configParams.debug) return false
   // const msgInfo = JSON.stringify(msg)
