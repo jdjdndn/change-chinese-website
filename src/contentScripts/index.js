@@ -44,13 +44,15 @@ chrome.storage.sync.get(['configParams'], function (result) {
   logInfo(result, configParams, 'storage-get');
 });
 
+// 接收配置消息
 if (typeof chrome.app.isInstalled !== 'undefined') {
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     configParams = {
       ...configParams,
       ...request
     }
-    logInfo(request, configParams, 'configParams');
+    removeErrListening()
+    logInfo(request, configParams, '接收消息');
     sendResponse('我收到了你的情书，popup~')
   })
 }
@@ -62,8 +64,21 @@ if (needChange && !noChange) {
   location.replace(hrefChange(href))
 }
 
-// 错误监听
-errListening()
+// 添加/移除错误监听
+removeErrListening()
+
+function removeErrListening() {
+  // 错误监听
+  const needRecord = (configParams.recordErrorList || []).some(it => host.includes(it))
+  if (needRecord) {
+    errListening()
+  } else {
+    const script = document.querySelector('.yucheng-error-record')
+    if (script) {
+      script.remove()
+    }
+  }
+}
 
 function errListening() {
   const script = document.createElement("script");
@@ -124,7 +139,7 @@ function errListening() {
   // 捕获资源加载失败错误 js css img...
   window.addEventListener('error', e => {
     debounce(() => {
-      boxInfo(JSON.stringify(e))
+      boxInfo(JSON.stringify(e)+'资源加载失败')
     })
   }, true)
   // 监听请求错误
@@ -167,11 +182,11 @@ function errListening() {
 // XMLHttpRequest = function () {
 //   new original_xhr();
 // }
-function logInfo(msg) {
+function logInfo(...msg) {
   if (!configParams.debug) return false
   // const msgInfo = JSON.stringify(msg)
   // log(`%c${msgInfo}`, 'background-color: yellow; font-size: 16px;')
-  log(msg);
+  log(...msg);
 }
 if (window.top) {
   win = window.top
@@ -411,13 +426,6 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   if (!liListStr) return
   debounce(() => {
     if (typeof chrome.app.isInstalled !== 'undefined') {
-      // chrome.runtime.sendMessage({
-      //   liListStr,
-      //   linkObj,
-      //   hrefList
-      // }, function (response) {
-      //   logInfo(response, 'content-script');
-      // });
       sendMessage({
         liListStr,
         linkObj,
@@ -1438,12 +1446,6 @@ setTimeout(function () {
   window.addEventListener('visibilitychange', function (event) {
     if (document.hidden) return
     if (typeof chrome.app.isInstalled !== 'undefined') {
-      // chrome.runtime.sendMessage({
-      //   liListStr,
-      //   linkObj
-      // }, function (response) {
-      //   logInfo(response, 'content-script');
-      // });
       sendMessage({
         liListStr,
         linkObj

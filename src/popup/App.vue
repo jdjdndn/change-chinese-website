@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-31 19:20:59
+ * @LastEditTime: 2021-12-31 21:24:29
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -38,6 +38,15 @@
         :value="noChangeHrefList"
         @blur="noChangeHrefListBlur"
       ></textarea>
+      4、记录报错列表
+      <textarea
+        name=""
+        id=""
+        cols="50"
+        rows="3"
+        :value="recordErrorList"
+        @blur="recordErrorBlur"
+      ></textarea>
     </div>
     <button @click="openBackground">打开popup页面</button>
   </div>
@@ -50,7 +59,8 @@ export default {
       msg: 'Welcome!--popup',
       changeEleMiaoBian: false, // 是否开启移入元素加样式
       noChangeHrefList: ['iflytek', 'zhixue', 'localhost'], // 不跳转其他url列表
-      debug: false // 调试模式
+      debug: false, // 调试模式
+      recordErrorList: ['localhost'] // 记录报错列表
     };
   },
   mounted() {
@@ -58,24 +68,47 @@ export default {
     // 获取配置参数
     chrome.storage.sync.get(['configParams'], function (result) {
       that.result = result.configParams;
-      const { changeEleMiaoBian, noChangeHrefList, debug } = that.result;
+      const { changeEleMiaoBian, noChangeHrefList, debug, recordErrorList } =
+        that.result;
       that.changeEleMiaoBian = changeEleMiaoBian || that.changeEleMiaoBian;
-      that.noChangeHrefList = noChangeHrefList || that.noChangeHrefList;
       that.debug = debug || that.debug;
+
+      that.noChangeHrefList = noChangeHrefList.length
+        ? noChangeHrefList
+        : that.noChangeHrefList;
+      that.recordErrorList = recordErrorList.length
+        ? recordErrorList
+        : that.recordErrorList;
       console.log(that, 'that');
     });
   },
   methods: {
+    recordErrorBlur(e) {
+      // const recordErrorList = e.target.value
+      //   .replaceAll('，', ',')
+      //   .split(',')
+      //   .filter(Boolean);
+      const recordErrorList = this.replaceComma(e.target.value);
+      // this.changeStorage({ recordErrorList });
+      // this.sendMessage({ recordErrorList });
+      this.saveAndSend({ recordErrorList });
+    },
     changeDebug(flag = false) {
       this.debug = flag;
       const { debug } = this;
-      this.changeStorage({ debug });
-      this.sendMessage({ debug });
+      // this.changeStorage({ debug });
+      // this.sendMessage({ debug });
+      this.saveAndSend({ debug });
     },
     noChangeHrefListBlur(e) {
-      console.log(e.target.value, 'val');
-      const noChangeHrefList = e.target.value.replaceAll('，', ',').split(',');
-      this.changeStorage({ noChangeHrefList });
+      // const noChangeHrefList = e.target.value
+      //   .replaceAll('，', ',')
+      //   .split(',')
+      //   .filter(Boolean);
+      // this.changeStorage({ noChangeHrefList });
+      // this.sendMessage({ noChangeHrefList });
+      const noChangeHrefList = this.replaceComma(e.target.value);
+      this.saveAndSend({ noChangeHrefList });
     },
     // 打开新页面
     openBackground() {
@@ -86,8 +119,18 @@ export default {
     changeEleCssText(flag = false) {
       this.changeEleMiaoBian = flag;
       const { changeEleMiaoBian } = this;
-      this.changeStorage({ changeEleMiaoBian });
-      this.sendMessage({ changeEleMiaoBian });
+      // this.changeStorage({ changeEleMiaoBian });
+      // this.sendMessage({ changeEleMiaoBian });
+      this.saveAndSend({ changeEleMiaoBian });
+    },
+    // 分割并替换逗号
+    replaceComma(val) {
+      return val.replaceAll('，', ',').split(',').filter(Boolean);
+    },
+    // 保存参数并且发消息
+    saveAndSend(msg) {
+      this.changeStorage(msg);
+      this.sendMessage(msg);
     },
     // 改变配置参数
     changeStorage(payload) {
