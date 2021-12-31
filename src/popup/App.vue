@@ -1,14 +1,13 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-29 23:27:34
+ * @LastEditTime: 2021-12-30 21:57:12
  * @LastEditors: yucheng
  * @Description: ...
 -->
 <template>
   <div ref="popup" class="popup">
     <h1>{{ msg }}</h1>
-    {{ noChangeHrefList }}
     <!-- 开启选中元素描边 -->
     <div class="popup-item">
       1、开启选中元素描边
@@ -61,8 +60,8 @@ export default {
       that.result = result.configParams;
       // that.changeEleMiaoBian = that.result.changeEleMiaoBian || false;
       // that.noChangeHrefList = that.result.noChangeHrefList;
-      that = {
-        ...that,
+      that._data = {
+        ...that._data,
         ...that.result
       };
       console.log(that, 'that');
@@ -96,6 +95,10 @@ export default {
     changeStorage(payload) {
       const params = { ...this.result, ...payload };
       console.log(params, 'params');
+      this._data = {
+        ...this._data,
+        ...params
+      };
       chrome.storage.sync.set({ configParams: params }, function (result) {});
     },
     // 发送消息

@@ -369,13 +369,18 @@ function addLinkListBox(linkList = [], boxName = '', customlinkStr) {
   if (!liListStr) return
   debounce(() => {
     if (typeof chrome.app.isInstalled !== 'undefined') {
-      chrome.runtime.sendMessage({
+      // chrome.runtime.sendMessage({
+      //   liListStr,
+      //   linkObj,
+      //   hrefList
+      // }, function (response) {
+      //   logInfo(response, 'content-script');
+      // });
+      sendMessage({
         liListStr,
         linkObj,
         hrefList
-      }, function (response) {
-        logInfo(response, 'content-script');
-      });
+      })
     }
   })
 }
@@ -646,6 +651,9 @@ const list = {
   },
   'git.iflytek.com': {
     callback: gitlab
+  },
+  'v3.vuejs.org': {
+    rehref: 'https://v3.cn.vuejs.org'
   }
 }
 
@@ -1388,13 +1396,31 @@ setTimeout(function () {
   window.addEventListener('visibilitychange', function (event) {
     if (document.hidden) return
     if (typeof chrome.app.isInstalled !== 'undefined') {
-      chrome.runtime.sendMessage({
+      // chrome.runtime.sendMessage({
+      //   liListStr,
+      //   linkObj
+      // }, function (response) {
+      //   logInfo(response, 'content-script');
+      // });
+      sendMessage({
         liListStr,
         linkObj
-      }, function (response) {
-        logInfo(response, 'content-script');
-      });
+      })
     }
   });
 
 }, 0)
+
+
+function sendMessage(object, i = 0) {
+  try {
+    if (i >= 10) return logInfo('发送消息失败10次了')
+    i++
+    chrome.runtime.sendMessage(object, function (response) {
+      logInfo(response, 'content-script');
+    });
+  } catch (error) {
+    logInfo('发送消息重试中，当前第' + i + '次')
+    sendMessage(object)
+  }
+}
