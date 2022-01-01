@@ -4,6 +4,9 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-return-assign */
 import './index.scss'
+import {
+  mouseClick
+} from '../common'
 // 'use strict';
 // const VERSION = "1.2.9";
 let performance_now = performance.now(),
@@ -11,7 +14,6 @@ let performance_now = performance.now(),
   linkObj = {},
   rmad, // 链接对象 key是href
   timer = null,
-  runIndex = 0, // 运行次数
   win = '',
   target = null, // 将要点击的目标元素
   targetCssText = '', // 将要点击目标元素的样式
@@ -52,8 +54,13 @@ if (typeof chrome.app.isInstalled !== 'undefined') {
       ...request
     }
     removeErrListening()
-    logInfo(request, configParams, '接收消息');
-    sendResponse('我收到了你的情书，popup~')
+    mouseClick(configParams)
+    videoPlay(configParams.mapInfo[host].videoPlayRate)
+    logInfo(request, configParams, '接收消息', configParams.mapInfo[host].videoPlayRate);
+    sendResponse({
+      host,
+      str: '我收到了你的情书， popup~'
+    })
   })
 }
 
@@ -344,15 +351,25 @@ function throttle(fun, delay = 50) {
 }
 
 // 视频播放
-function videoPlay() {
+function videoPlay(rate = 1.5, index = 0) {
   logInfo('视频加速')
+  if (index > 10) {
+    return false
+  }
+  index++
   const video = $('video')
   if (video) {
-    if (video.paused && runIndex < 1) {
+    const realRate = Number(rate) === rate ? rate : 1.5
+    if (video.playbackRate === realRate) {
       video.play()
+      return false
+    } else {
+      video.playbackRate = realRate
     }
-    video.playbackRate = 1.5
-    runIndex++
+  } else {
+    setTimeout(() => {
+      videoPlay()
+    }, 500)
   }
 }
 
@@ -503,65 +520,6 @@ function getDomList(str, filterClassList) {
   return arr
 }
 
-// ctrl + space 实现点击鼠标所在位置
-function mouseClick() {
-  // 从子孙往上找，直到找到可以点击的dom
-  function findParentClick(item) {
-    // logInfo(item, 'findParentClicK可点击的对象');
-    if (!item) return
-    // 获取元素上的监听事件
-    if (typeof getEventListeners === 'function') {
-      const listeners = getEventListeners(item)
-      if (listeners && listeners.click) {
-        item.click()
-        return false
-      }
-    } else if ('click' in item) {
-      // 拿不到监听的事件对象就看能否点击，能点击就点击
-      item.click()
-      return false
-    }
-    const parent = item.parentNode
-    findParentClick(parent)
-    // 有a链接触发跳转
-    // if (parent && parent.href) {
-    //   commonTiaozhuan(parent, true)
-    //   return
-    // }
-  }
-
-  window.addEventListener("pointermove", function (e) {
-    debounce(() => {
-      if (configParams.changeEleMiaoBian) {
-        if (target) {
-          target.style.cssText = targetCssText
-        }
-      }
-      target = e.target
-      if (configParams.changeEleMiaoBian) {
-        targetCssText = e.target.style.cssText
-        e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
-      }
-      if (!target || !target.nodeName || !target.classList || target.innerText === '') return false
-      logInfo(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
-    })
-  });
-
-  window.addEventListener("keydown", function (e) {
-    const code = e.keyCode;
-    if (e.ctrlKey && code === 32) {
-      // 有a链接触发跳转
-      // if (target.href) {
-      //   logInfo(target.href, 'target.href');
-      //   commonTiaozhuan(target, true)
-      //   return
-      // }
-      // 没有a链接就点击
-      findParentClick(target)
-    }
-  });
-}
-
 const list = {
   'www.baidu.com': {
     callback: baidu,
@@ -604,12 +562,14 @@ const list = {
   },
   'www.4hu.tv': {
     callback: hu4tv,
+    hasVideo: true
   },
   'www.csdn.net': {
     callback: csdn,
   },
   'www.youtube.com': {
     callback: youtube,
+    hasVideo: true,
     scroll: '#primary .style-scope #contents'
   },
   'developer.mozilla.org': {
@@ -642,19 +602,21 @@ const list = {
     // callback: vite,
   },
   'cn.pornhub.com': {
-    callback: pornhub
+    callback: pornhub,
+    hasVideo: true
   },
   'www.yyyweb.com': {
     callback: yyyweb,
   },
   'yt5.tv': {
     callback: yt5,
+    hasVideo: true
   },
   '360yy.cn': {
-    callback: videoPlay,
+    hasVideo: true
   },
   'www.tiktok.com': {
-    callback: videoPlay
+    hasVideo: true
   },
   'www.qidian.com': {
     callback: qidian
@@ -717,7 +679,7 @@ clearInterval(timer)
 
 function main() {
   // 键盘点击事件
-  mouseClick()
+  mouseClick(configParams)
   // 获取所有a链接
   const callback = function (mutationsList, observer) {
     addLinkListBox(getDomList('a'))
@@ -767,6 +729,10 @@ function main() {
         }
         window.removeEventListener('keydown', loadData)
         window.addEventListener('keydown', loadData)
+      }
+
+      if (list[k].hasVideo) {
+        videoPlay()
       }
 
       const callback = function (mutationsList, observer) {
@@ -870,7 +836,6 @@ function yt5() {
     'detail-share',
   ]
   removeArrList(adClassList, '.')
-  videoPlay()
 }
 // 前端里
 function yyyweb() {
@@ -985,14 +950,12 @@ function hu4tv() {
   if (pathname !== '/') {
     $$('.wrap').length === 6 && $$('.wrap')[0].remove()
   }
-  videoPlay()
 }
 // csdn
 function csdn() {}
 // youtube
 function youtube() {
   setStyle('.html5-video-player', 'display: block')
-  videoPlay()
   // const linkList = [...getDomList('.ytd-rich-grid-renderer #meta #video-title-link'), ...getDomList('.ytd-watch-next-secondary-results-renderer #dismissible .metadata a')]
   // addLinkListBox(linkList, 'youtube-toolbox')
 }
@@ -1121,7 +1084,6 @@ function pornhub() {
   removeFunc('li.sniperModeEngaged.alpha')
   const adIdList = ['pb_content', 'pb_top_bar']
   removeArrList(adIdList, '#')
-  videoPlay()
 }
 
 function github() {
@@ -1440,23 +1402,22 @@ setTimeout(function () {
   }
 }, 0)
 
-setTimeout(function () {
-  tiaozhuan()
+// tiaozhuan()
+window.addEventListener('visibilitychange', function (event) {
+  if (document.hidden) return
+  if (typeof chrome.app.isInstalled !== 'undefined') {
+    sendMessage({
+      liListStr,
+      linkObj
+    })
+  }
+});
 
-  window.addEventListener('visibilitychange', function (event) {
-    if (document.hidden) return
-    if (typeof chrome.app.isInstalled !== 'undefined') {
-      sendMessage({
-        liListStr,
-        linkObj
-      })
-    }
-  });
-
-}, 0)
-
-
-function sendMessage(object, i = 0) {
+function sendMessage(object = {}, i = 0) {
+  object = {
+    ...object,
+    host
+  }
   try {
     if (i >= 10) return logInfo('发送消息失败10次了')
     i++

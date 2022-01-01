@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-09 20:34:43
+ * @LastEditTime: 2022-01-01 17:12:44
  * @LastEditors: yucheng
  * @Description: 。。。
 -->
@@ -13,21 +13,15 @@
 </template>
 
 <script>
+import { mouseClick } from '../common';
 // this指向window
 export default {
   data() {
     return {};
   },
   mounted() {
-    // ctrl + space 实现点击鼠标所在位置
-    const body = document.querySelector('body');
+    mouseClick();
     let linkObjBacket = {};
-    let point = {},
-      timer = null, // mutationObsever配置
-      config = {
-        childList: true,
-        subtree: true
-      };
     const ul = document.querySelector('ul');
     // const ol = document.querySelector('ol');
     chrome.runtime.onMessage.addListener(function (
@@ -51,97 +45,6 @@ export default {
       }
       ul.innerHTML = olListStr;
     });
-    return;
-    function debounce(fn, delay = 300) {
-      if (timer) {
-        clearTimeout(timer);
-      }
-      timer = setTimeout(fn, delay);
-    }
-
-    //获取页面上所有的dom节点
-    function getNodeList(body, nodeList = [], index = 0) {
-      const childrenList = [...body.children];
-      if (childrenList.length <= 0) {
-        return nodeList;
-      }
-      index++;
-      childrenList.forEach((item) => {
-        const filterNodeNameList = ['SCRIPT', 'STYLE', 'IFRAME'];
-        if (filterNodeNameList.includes(item.nodeName)) return;
-        const point = item.getBoundingClientRect();
-        nodeList.push({
-          node: item,
-          point,
-          index
-        });
-        getNodeList(item, nodeList, index);
-      });
-    }
-    // 从子孙往上找，直到找到可以点击的dom
-    function findParentClick(item) {
-      console.log(item, 'findParentClicK可点击的对象');
-      if ('click' in item) {
-        item.click();
-        return false;
-      }
-      const parent = item.parentNode;
-      findParentClick(parent);
-    }
-    window.addEventListener('mousemove', function (e) {
-      debounce(() => {
-        point = {
-          x: e.clientX,
-          y: e.clientY
-        };
-      });
-    });
-
-    // 获取所有元素
-    let nodeList = [];
-
-    function getNodeListCallback() {
-      nodeList = [];
-      getNodeList(body, nodeList);
-    }
-    const observer = new MutationObserver(getNodeListCallback);
-    observer.observe(document, config);
-
-    window.addEventListener('keydown', function (e) {
-      const code = e.keyCode;
-      if (e.ctrlKey && code === 32) {
-        debounce(() => {
-          const chooseList = nodeList.filter((item) => inDom(item, point));
-          console.log(chooseList, nodeList, '-----chooseList-----');
-          const len = chooseList.length;
-          if (len === 0) return;
-          let index = 0;
-          chooseList.forEach((item, i) => {
-            if (index < item.index) {
-              index = item.index;
-            }
-          });
-          const item = chooseList.find((item) => item.index === index);
-          findParentClick(item.node);
-        });
-      }
-    });
-
-    function inDom(node, point) {
-      const nodePoint = node.point;
-      if (node.node.classList.contains('account-list')) {
-        console.log(node, nodePoint, point, 'node');
-      }
-      if (
-        point.x >= nodePoint.x &&
-        point.x <= nodePoint.right &&
-        point.y >= nodePoint.y &&
-        point.y <= nodePoint.bottom
-      ) {
-        return true;
-      }
-      return false;
-    }
   }
 };
 </script>

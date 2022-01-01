@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-31 21:24:29
+ * @LastEditTime: 2022-01-01 16:53:25
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -47,80 +47,137 @@
         :value="recordErrorList"
         @blur="recordErrorBlur"
       ></textarea>
+      5、视频播放速度
+      <!-- <input type="text" :value="videoPlayRate" @blur="videoPlayRateBlur" /> -->
+      <select name="select" @change="videoPlayRateChange">
+        <option
+          :label="item.videoPlayRate"
+          :value="item.videoPlayRate"
+          :selected="item.videoPlayRate === videoPlayRate"
+          v-for="(item, i) in videoPlayRateList"
+          :key="i"
+        >
+          Value 1
+        </option>
+      </select>
     </div>
     <button @click="openBackground">打开popup页面</button>
   </div>
 </template>
 
 <script>
+import { mouseClick } from '../common';
 export default {
   data() {
     return {
       msg: 'Welcome!--popup',
+      configParamsBacket: {}, // 深拷贝所有配置参数
+      mapInfo: {}, // content对象信息
+      host: '', // location.host
+      videoPlayRateList: [
+        {
+          videoPlayRate: 1
+        },
+        {
+          videoPlayRate: 1.5
+        },
+        {
+          videoPlayRate: 2
+        }
+      ], // 视频播放速度列表
       changeEleMiaoBian: false, // 是否开启移入元素加样式
       noChangeHrefList: ['iflytek', 'zhixue', 'localhost'], // 不跳转其他url列表
       debug: false, // 调试模式
-      recordErrorList: ['localhost'] // 记录报错列表
+      recordErrorList: ['localhost'], // 记录报错列表
+      videoPlayRate: 1.5 // 默认视频播放速度
     };
   },
   mounted() {
-    let that = this;
-    // 获取配置参数
-    chrome.storage.sync.get(['configParams'], function (result) {
-      that.result = result.configParams;
-      const { changeEleMiaoBian, noChangeHrefList, debug, recordErrorList } =
-        that.result;
-      that.changeEleMiaoBian = changeEleMiaoBian || that.changeEleMiaoBian;
-      that.debug = debug || that.debug;
-
-      that.noChangeHrefList = noChangeHrefList.length
-        ? noChangeHrefList
-        : that.noChangeHrefList;
-      that.recordErrorList = recordErrorList.length
-        ? recordErrorList
-        : that.recordErrorList;
-      console.log(that, 'that');
+    const { getAndSetParams, sendMessage } = this;
+    const that = this;
+    getAndSetParams();
+    sendMessage({}, (res) => {
+      if (res && res.host) {
+        that.host = res.host;
+      }
     });
   },
   methods: {
+    // 设置content.js中的list列表
+    setConfigMap() {},
+    // 获取storage并设置参数
+    getAndSetParams() {
+      let that = this;
+      // 获取配置参数
+      chrome.storage.sync.get(['configParams'], function (result) {
+        that.result = result.configParams;
+        console.log(that.result, '看看获取的参数');
+        that.configParamsBacket = JSON.parse(
+          JSON.stringify(result.configParams) || '{}'
+        );
+        const {
+          changeEleMiaoBian,
+          noChangeHrefList,
+          debug,
+          recordErrorList,
+          mapInfo
+        } = that.result;
+        const { host } = this;
+        that.changeEleMiaoBian = changeEleMiaoBian || that.changeEleMiaoBian;
+        that.debug = debug || that.debug;
+        that.mapInfo = mapInfo || {};
+
+        that.noChangeHrefList =
+          noChangeHrefList && noChangeHrefList.length
+            ? noChangeHrefList
+            : that.noChangeHrefList;
+
+        that.recordErrorList =
+          recordErrorList && recordErrorList.length
+            ? recordErrorList
+            : that.recordErrorList;
+
+        mouseClick(that.result);
+      });
+    },
     recordErrorBlur(e) {
-      // const recordErrorList = e.target.value
-      //   .replaceAll('，', ',')
-      //   .split(',')
-      //   .filter(Boolean);
       const recordErrorList = this.replaceComma(e.target.value);
-      // this.changeStorage({ recordErrorList });
-      // this.sendMessage({ recordErrorList });
       this.saveAndSend({ recordErrorList });
     },
-    changeDebug(flag = false) {
-      this.debug = flag;
-      const { debug } = this;
-      // this.changeStorage({ debug });
-      // this.sendMessage({ debug });
+    changeDebug(debugFlag = false) {
+      this.debug = debugFlag;
+      const { debug, noChangeLog, isChange } = this;
+      const flag = isChange('debug');
+      if (flag) {
+        return noChangeLog('debug');
+      }
       this.saveAndSend({ debug });
     },
+    videoPlayRateChange(e) {
+      const { host, mapInfo, noChangeLog } = this;
+      if (!mapInfo || !mapInfo[host] || !mapInfo[host].videoPlayRate)
+        return false;
+      if (mapInfo[host].videoPlayRate === Number(e.target.value))
+        return noChangeLog('视频播放速度');
+      mapInfo[host].videoPlayRate = Number(e.target.value);
+      this.saveAndSend({ mapInfo });
+    },
     noChangeHrefListBlur(e) {
-      // const noChangeHrefList = e.target.value
-      //   .replaceAll('，', ',')
-      //   .split(',')
-      //   .filter(Boolean);
-      // this.changeStorage({ noChangeHrefList });
-      // this.sendMessage({ noChangeHrefList });
       const noChangeHrefList = this.replaceComma(e.target.value);
       this.saveAndSend({ noChangeHrefList });
     },
     // 打开新页面
     openBackground() {
-      // alert(chrome.extension.getURL('background.html'), 'extension');
       window.open(chrome.extension.getURL('options.html'));
     },
     // 切换是否开启元素描边
-    changeEleCssText(flag = false) {
-      this.changeEleMiaoBian = flag;
-      const { changeEleMiaoBian } = this;
-      // this.changeStorage({ changeEleMiaoBian });
-      // this.sendMessage({ changeEleMiaoBian });
+    changeEleCssText(changeEleMiaoBianFlag = false) {
+      this.changeEleMiaoBian = changeEleMiaoBianFlag;
+      const { changeEleMiaoBian, noChangeLog, isChange } = this;
+      const flag = isChange('changeEleMiaoBian');
+      if (flag) {
+        return noChangeLog('元素描边');
+      }
       this.saveAndSend({ changeEleMiaoBian });
     },
     // 分割并替换逗号
@@ -128,33 +185,70 @@ export default {
       return val.replaceAll('，', ',').split(',').filter(Boolean);
     },
     // 保存参数并且发消息
-    saveAndSend(msg) {
-      this.changeStorage(msg);
-      this.sendMessage(msg);
+    saveAndSend(payload) {
+      const params = { ...this.result, ...payload };
+      this.changeStorage(params);
+      this.sendMessage(params);
+      this.configParamsBacket = JSON.parse(JSON.stringify(params));
+      mouseClick(params);
     },
     // 改变配置参数
-    changeStorage(payload) {
-      const params = { ...this.result, ...payload };
-      console.log(params, 'params');
+    changeStorage(params) {
       this._data = {
         ...this._data,
         ...params
       };
       chrome.storage.sync.set({ configParams: params }, function (result) {});
     },
+    // 判断参数是否变化, true未变化， false变化了
+    isChange(name) {
+      if (!name) return;
+      const { configParamsBacket } = this;
+      if (typeof configParamsBacket[name] !== 'object') {
+        if (configParamsBacket[name] === this[name]) return true;
+        return false;
+      } else if (Array.isArray(configParamsBacket[name])) {
+        if (configParamsBacket[name].length !== this[name].length) return false;
+        const flag = configParamsBacket[name].every((item) => {
+          return this[name].includes(item);
+        });
+        return flag;
+      }
+      return true;
+    },
+    // 未修改时的提示信息
+    noChangeLog(msg) {
+      const { debug } = this;
+      if (!debug) return false;
+      console.log(msg + '一致，不修改');
+    },
     // 发送消息
-    sendMessage(message) {
+    sendMessage(message, fn = () => {}) {
       chrome.tabs.query(
         {
           active: true,
           currentWindow: true
         },
         (tabs) => {
-          chrome.tabs.sendMessage(tabs[0].id, message, (res) => {
-            console.log(res);
-          });
+          chrome.tabs.sendMessage(tabs[0].id, message, fn);
         }
       );
+    }
+  },
+  watch: {
+    host: {
+      immediate: true,
+      handler(val) {
+        if (!val) return;
+        let { mapInfo, videoPlayRate, saveAndSend } = this;
+        if (!mapInfo[val]) {
+          mapInfo[val] = {};
+          mapInfo[val].videoPlayRate = videoPlayRate;
+          saveAndSend({ mapInfo });
+        } else {
+          this.videoPlayRate = mapInfo[val].videoPlayRate;
+        }
+      }
     }
   }
 };
@@ -168,6 +262,9 @@ export default {
   }
   textarea {
     outline: 0;
+  }
+  select {
+    width: 50%;
   }
 }
 </style>
