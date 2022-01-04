@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-01 12:10:26
+ * @LastEditTime: 2022-01-04 23:16:38
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -32,10 +32,34 @@ const blockUrlList = {
 // 查找过滤参数的数组
 let sliceArr = []
 // 过滤参数的索引
-let kIndex, linkObj = {}
+let kIndex, linkObj = {},
+  requestObj = {}, //请求参数对象
+  requestList = [], //请求参数列表
+  maxRecordIndex = 200
 
 function handlerRequest(details) {
   // console.log(details, 'details')
+  details.requestBody.raw.forEach(raw => {
+    const blob = new Blob([raw.bytes], {
+      type: 'application/json'
+    })
+    blob.text().then(res => {
+      requestList.unshift({
+        url: details.url,
+        data: JSON.parse(res || '{}')
+      })
+      if (requestList.length > maxRecordIndex) {
+        requestList = requestList.slice(maxRecordIndex)
+      }
+      // console.log(res, '这里', JSON.parse(res));
+      if (requestObj[details.url]) {
+        requestObj[details.url].push(JSON.parse(res))
+      } else {
+        requestObj[details.url] = []
+      }
+    })
+  })
+  console.log(requestObj, requestList, '请求参数对象');
   // 如果找到了一个要拦截的参数，记录位置，下次从找到的位置接着找
   for (const k in blockUrlList) {
     kIndex = k

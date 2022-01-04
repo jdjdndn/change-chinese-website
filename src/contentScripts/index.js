@@ -17,7 +17,6 @@ let performance_now = performance.now(),
   win = '',
   target = null, // 将要点击的目标元素
   targetCssText = '', // 将要点击目标元素的样式
-  errorBox = document.createElement('div'), // 错误信息展示盒子
   configParams = {} // popup配置参数
 
 const {
@@ -35,7 +34,8 @@ const {
   error,
   dir
 } = console
-const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org']
+const vueAroundList = ['router.vuejs.org', 'vuex.vuejs.org', 'cli.vuejs.org'],
+  hrefReg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
 
 // 获取配置参数
 chrome.storage.sync.get(['configParams'], function (result) {
@@ -43,6 +43,7 @@ chrome.storage.sync.get(['configParams'], function (result) {
     ...configParams,
     ...result.configParams
   }
+  commonEvents(configParams)
   logInfo(result, configParams, 'storage-get');
 });
 
@@ -53,9 +54,7 @@ if (typeof chrome.app.isInstalled !== 'undefined') {
       ...configParams,
       ...request
     }
-    removeErrListening()
-    mouseClick(configParams)
-    videoPlay(configParams.mapInfo[host].videoPlayRate)
+    commonEvents(configParams)
     logInfo(request, configParams, '接收消息', configParams.mapInfo[host].videoPlayRate);
     sendResponse({
       host,
@@ -64,26 +63,34 @@ if (typeof chrome.app.isInstalled !== 'undefined') {
   })
 }
 
-const hrefReg = /(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/
-const needChange = otherSiteHref(href)
-const noChange = (configParams.noChangeHrefList || []).some(it => host.includes(it))
-if (needChange && !noChange) {
-  location.replace(hrefChange(href))
+// 初始化跟修改配置后的公共触发事件
+function commonEvents(configParams) {
+  // 跳转网址
+  replaceHref(configParams)
+  // 键盘点击事件
+  mouseClick(configParams)
+  // 添加/移除错误监听
+  removeErrListening(configParams)
+  videoPlay((configParams.mapInfo[host] || {}).videoPlayRate)
 }
 
-// 添加/移除错误监听
-removeErrListening()
+function replaceHref(configParams) {
+  const needChange = otherSiteHref(href)
+  const noChange = (configParams.noChangeHrefList || []).some(it => host.includes(it))
+  if (needChange && !noChange) {
+    location.replace(hrefChange(href))
+  }
+}
 
-function removeErrListening() {
+function removeErrListening(configParams) {
   // 错误监听
   const needRecord = (configParams.recordErrorList || []).some(it => host.includes(it))
-  if (needRecord) {
+  const script = document.querySelector('.yucheng-error-record')
+  if (!needRecord) {
+    script.remove()
+  }
+  if (needRecord && !script) {
     errListening()
-  } else {
-    const script = document.querySelector('.yucheng-error-record')
-    if (script) {
-      script.remove()
-    }
   }
 }
 
@@ -91,29 +98,30 @@ function errListening() {
   const script = document.createElement("script");
   script.className = 'yucheng-error-record'
   script.innerHTML = `
-  let errorBox = document.createElement('div'),timer = null,delay=3000,{log} = console,onerror = window.onerror
-  errorBox.classList.add('yucheng-error-box')
-  document.body.appendChild(errorBox)
+  let YUCHENG_ERROR_BOX = document.createElement('div'),YUCHENG_TIMER = null,YUCHENG_DELAY=3000,{log} = console,onerror = window.onerror,MAX_RECORD_REQUEST_LIST = 200
+  YUCHENG_ERROR_BOX.classList.add('yucheng-error-box')
+  document.body.appendChild(YUCHENG_ERROR_BOX)
+  let yuchengRequestList = []
   window.addEventListener('keyup', (e) => {
     if (e.keyCode === 13) {
-      clearTimeout(timer);
-      errorBox.style.display = 'none'
+      clearTimeout(YUCHENG_TIMER);
+      YUCHENG_ERROR_BOX.style.display = 'none'
     }
   })
 
-  function debounce(fn, delay = 16) {
-    if (timer) {
-      clearTimeout(timer);
+  function debounce(fn, YUCHENG_DELAY = 16) {
+    if (YUCHENG_TIMER) {
+      clearTimeout(YUCHENG_TIMER);
     }
-    timer = setTimeout(fn, delay);
+    YUCHENG_TIMER = setTimeout(fn, YUCHENG_DELAY);
   }
 
   function boxInfo(info) {
-    errorBox.innerHTML = info
-    errorBox.style.display = 'block'
+    YUCHENG_ERROR_BOX.innerHTML = info
+    YUCHENG_ERROR_BOX.style.display = 'block'
     setTimeout(() => {
-      errorBox.style.display = 'none'
-    }, delay)
+      YUCHENG_ERROR_BOX.style.display = 'none'
+    }, YUCHENG_DELAY)
   }
 
   // 监听 js 错误
@@ -173,6 +181,20 @@ function errListening() {
     if(!status.startsWith('2') && (e.detail.responseText || e.detail.responseURL) ) {
       const info = '错误码：'+e.detail.status +'，错误信息：'+ e.detail.responseText+'，错误url:'+e.detail.responseURL
       boxInfo(info)
+    } else {
+      if(e.detail.responseURL && (e.detail.responseText || e.detail.response)) {
+        yuchengRequestList.push({
+          url: e.detail.responseURL,
+          data: JSON.parse(e.detail.responseText || "{}")
+        })
+        if(yuchengRequestList.length > MAX_RECORD_REQUEST_LIST) {
+          const len = yuchengRequestList.length - MAX_RECORD_REQUEST_LIST
+          yuchengRequestList = yuchengRequestList.slice(len)
+        }
+        debounce(()=> {
+          console.log(yuchengRequestList, '请求对象')
+        },100)
+      }
     }
   });
   window.addEventListener('ajaxAbort', function (e) {
@@ -185,10 +207,6 @@ function errListening() {
   document.head.appendChild(script)
 }
 
-// var original_xhr = XMLHttpRequest;
-// XMLHttpRequest = function () {
-//   new original_xhr();
-// }
 function logInfo(...msg) {
   if (!configParams.debug) return false
   // const msgInfo = JSON.stringify(msg)
@@ -678,8 +696,6 @@ const config = {
 clearInterval(timer)
 
 function main() {
-  // 键盘点击事件
-  mouseClick(configParams)
   // 获取所有a链接
   const callback = function (mutationsList, observer) {
     addLinkListBox(getDomList('a'))
