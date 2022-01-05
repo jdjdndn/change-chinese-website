@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-04 23:16:38
+ * @LastEditTime: 2022-01-05 20:36:39
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -35,11 +35,12 @@ let sliceArr = []
 let kIndex, linkObj = {},
   requestObj = {}, //请求参数对象
   requestList = [], //请求参数列表
-  maxRecordIndex = 200
+  maxRecordIndex = 200,
+  configParams = {} // 配置参数对象
 
 function handlerRequest(details) {
   // console.log(details, 'details')
-  details.requestBody.raw.forEach(raw => {
+  ((details.requestBody || {}).raw || []).forEach(raw => {
     const blob = new Blob([raw.bytes], {
       type: 'application/json'
     })
@@ -105,6 +106,7 @@ function handlerRequest(details) {
   // }
 }
 
+// 拦截请求
 chrome.webRequest.onBeforeRequest.addListener(
   handlerRequest, {
     urls: ['<all_urls>'],
@@ -112,7 +114,6 @@ chrome.webRequest.onBeforeRequest.addListener(
   // 定义获取哪些权限
   ['blocking', 'requestBody', 'extraHeaders']
 )
-// 拦截请求
 
 chrome.contextMenus.create({
   title: '使用谷歌搜索：%s', // %s表示选中的文字
@@ -125,8 +126,6 @@ chrome.contextMenus.create({
     })
   },
 })
-
-console.log(chrome, 'chrome')
 
 // 旧链接拿到新链接，没有返回 ''
 function hrefChange(href) {
@@ -147,25 +146,68 @@ chrome.runtime.onMessage.addListener(function notify(
   sender,
   sendResponse
 ) {
-  linkObj = {
-    ...linkObj,
-    ...message.linkObj
-  }
-  // 这种只分类一次
-  const newLinkObj = {}
-  for (const k in linkObj) {
-    if (!k) continue
-    const {
-      origin
-    } = new URL(k)
-    if (newLinkObj[origin]) {
-      newLinkObj[origin][k] = linkObj[k]
-    } else {
-      newLinkObj[origin] = {}
+  if (message.linkObj) {
+    linkObj = {
+      ...linkObj,
+      ...message.linkObj
     }
+    // 这种只分类一次
+    const newLinkObj = {}
+    for (const k in linkObj) {
+      if (!k) continue
+      const {
+        origin
+      } = new URL(k)
+      if (newLinkObj[origin]) {
+        newLinkObj[origin][k] = linkObj[k]
+      } else {
+        newLinkObj[origin] = {}
+      }
+    }
+    console.log(newLinkObj, linkObj);
+  } else {
+    configParams = message
+    commonEvents(message)
   }
-  console.log(newLinkObj, linkObj);
 });
+
+// 获取配置
+chrome.storage.sync.get(['configParams'], function (result) {
+  console.log(result.configParams, 'result');
+  configParams = result.configParams
+  commonEvents(configParams)
+})
+
+function commonEvents(configParams) {
+  // 清理缓存
+  clearCache(configParams)
+}
+
+function clearCache(configParams) {
+  const callback = function () {
+    console.log('Do something clever here once data has been removed', configParams.clearTime);
+  };
+  if (!configParams.clearTime) return false
+  const millisecondsPerWeek = 1000 * 60 * 60 * 24 * (configParams.clearTime || 1);
+  const oneWeekAgo = (new Date()).getTime() - millisecondsPerWeek;
+  chrome.browsingData.remove({
+    "since": oneWeekAgo
+  }, {
+    "appcache": true,
+    "cache": true,
+    "cacheStorage": true,
+    "cookies": true,
+    "downloads": true,
+    "fileSystems": true,
+    "formData": true,
+    "history": true,
+    "indexedDB": true,
+    "localStorage": true,
+    "passwords": true,
+    "serviceWorkers": true,
+    "webSQL": true
+  }, callback);
+}
 
 chrome.browserAction.onClicked.addListener(function () {
   chrome.tabs.query({
@@ -174,7 +216,7 @@ chrome.browserAction.onClicked.addListener(function () {
   }, function (tabs) {
     const tabId = tabs.length ? tabs[0].id : null
     const message = {
-      name: 'chengyu'
+      name: 'yucheng'
     }
     chrome.tabs.sendMessage(tabId, message, function (response) {
       console.log(response, 'background')

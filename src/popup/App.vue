@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-01 16:53:25
+ * @LastEditTime: 2022-01-05 20:41:25
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -38,7 +38,7 @@
         :value="noChangeHrefList"
         @blur="noChangeHrefListBlur"
       ></textarea>
-      4、记录报错列表
+      4、记录报错列表(host为ip地址的自动添加)
       <textarea
         name=""
         id=""
@@ -46,6 +46,7 @@
         rows="3"
         :value="recordErrorList"
         @blur="recordErrorBlur"
+        @keyup="recordErrorKeyup"
       ></textarea>
       5、视频播放速度
       <!-- <input type="text" :value="videoPlayRate" @blur="videoPlayRateBlur" /> -->
@@ -56,9 +57,17 @@
           :selected="item.videoPlayRate === videoPlayRate"
           v-for="(item, i) in videoPlayRateList"
           :key="i"
-        >
-          Value 1
-        </option>
+        ></option></select
+      ><br />
+      6、缓存清理（日）
+      <select name="select" @change="clearTimeChange">
+        <option
+          :label="item"
+          :value="item"
+          :selected="item === clearTime"
+          v-for="(item, i) in clearTimeList"
+          :key="i"
+        ></option>
       </select>
     </div>
     <button @click="openBackground">打开popup页面</button>
@@ -85,6 +94,8 @@ export default {
           videoPlayRate: 2
         }
       ], // 视频播放速度列表
+      clearTimeList: [1, 3, 7, 30], // 清理缓存事件列表
+      clearTime: 1,
       changeEleMiaoBian: false, // 是否开启移入元素加样式
       noChangeHrefList: ['iflytek', 'zhixue', 'localhost'], // 不跳转其他url列表
       debug: false, // 调试模式
@@ -96,15 +107,37 @@ export default {
     const { getAndSetParams, sendMessage } = this;
     const that = this;
     getAndSetParams();
+    console.log(chrome, 'chrome');
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      that.host = request.host;
+      console.log(request, sender, '接受消息');
+    });
     sendMessage({}, (res) => {
       if (res && res.host) {
         that.host = res.host;
       }
     });
+    this.start();
   },
   methods: {
+    start() {
+      chrome.windows.getAll({ populate: true }, function (windowList) {
+        console.log(windowList, 'windowList');
+      });
+    },
     // 设置content.js中的list列表
     setConfigMap() {},
+    // 缓存清理时间切换
+    clearTimeChange(e) {
+      this.clearTime = Number(e.target.value);
+      const { clearTime } = this;
+      this.saveAndSend({ clearTime });
+    },
+    // 获取配置参数之后做点事情
+    afterGetConfigParams(result) {
+      mouseClick(result);
+      this.sendMessage2(result);
+    },
     // 获取storage并设置参数
     getAndSetParams() {
       let that = this;
@@ -120,12 +153,15 @@ export default {
           noChangeHrefList,
           debug,
           recordErrorList,
-          mapInfo
+          mapInfo,
+          host,
+          clearTime
         } = that.result;
-        const { host } = this;
+        that.host = host;
         that.changeEleMiaoBian = changeEleMiaoBian || that.changeEleMiaoBian;
         that.debug = debug || that.debug;
         that.mapInfo = mapInfo || {};
+        that.clearTime = clearTime || 1;
 
         that.noChangeHrefList =
           noChangeHrefList && noChangeHrefList.length
@@ -137,8 +173,13 @@ export default {
             ? recordErrorList
             : that.recordErrorList;
 
-        mouseClick(that.result);
+        that.afterGetConfigParams(that.result);
       });
+    },
+    recordErrorKeyup(e) {
+      if (e.keyCode === 13) {
+        this.recordErrorBlur();
+      }
     },
     recordErrorBlur(e) {
       const recordErrorList = this.replaceComma(e.target.value);
@@ -189,6 +230,7 @@ export default {
       const params = { ...this.result, ...payload };
       this.changeStorage(params);
       this.sendMessage(params);
+      this.sendMessage2(params);
       this.configParamsBacket = JSON.parse(JSON.stringify(params));
       mouseClick(params);
     },
@@ -233,20 +275,31 @@ export default {
           chrome.tabs.sendMessage(tabs[0].id, message, fn);
         }
       );
+    },
+    sendMessage2(message) {
+      chrome.runtime.sendMessage(message, function (response) {});
     }
   },
   watch: {
     host: {
       immediate: true,
-      handler(val) {
+      handler(val, oldval) {
         if (!val) return;
-        let { mapInfo, videoPlayRate, saveAndSend } = this;
+        if (val == oldval) return;
+        let { mapInfo, videoPlayRate, saveAndSend, recordErrorList } = this;
         if (!mapInfo[val]) {
           mapInfo[val] = {};
           mapInfo[val].videoPlayRate = videoPlayRate;
           saveAndSend({ mapInfo });
         } else {
           this.videoPlayRate = mapInfo[val].videoPlayRate;
+        }
+        const valIndex = val.indexOf(':');
+        if (valIndex !== -1) {
+          const hostStr = val.slice(0, valIndex);
+          if (recordErrorList.includes(hostStr)) return false;
+          recordErrorList.push(hostStr);
+          saveAndSend({ recordErrorList });
         }
       }
     }
@@ -265,6 +318,7 @@ export default {
   }
   select {
     width: 50%;
+    outline: none;
   }
 }
 </style>

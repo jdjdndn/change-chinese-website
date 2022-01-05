@@ -52,10 +52,12 @@
     "https://*/*",
     "fontSettings",
     "<all_urls>",
-    "bookmarks"
+    "bookmarks",
+    "browsingData"
   ],
   "version": "1.0.0",
   "web_accessible_resources": [
-    "js/inject.js"
+    "js/inject.js",
+    "error-record.js"
   ]
 }
