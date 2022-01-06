@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-06 22:25:19
+ * @LastEditTime: 2022-01-06 23:17:28
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -112,7 +112,7 @@ function clipboardWrite(text) {
 }
 
 function rmDom(...args) {
-  args.forEach(it => it.remove())
+  args.forEach(it => it && it.remove())
 }
 
 function copyImg() {
