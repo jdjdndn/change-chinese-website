@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-06 23:17:28
+ * @LastEditTime: 2022-01-06 23:34:21
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -111,10 +111,6 @@ function clipboardWrite(text) {
   }
 }
 
-function rmDom(...args) {
-  args.forEach(it => it && it.remove())
-}
-
 function copyImg() {
   const img = new Image();
   const canvas = document.createElement('canvas');
@@ -150,11 +146,9 @@ function canvasCopy(canvas, need = false) {
     navigator.clipboard.write(data)
       .then(
         () => {
-          if (need) rmDom(img, canvas);
           console.log("Copied to clipboard successfully!");
         },
         () => {
-          if (need) rmDom(img, canvas);
           console.error("Unable to write to clipboard.");
         }
       );
