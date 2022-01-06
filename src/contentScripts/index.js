@@ -5,7 +5,8 @@
 /* eslint-disable no-return-assign */
 import './index.scss'
 import {
-  mouseClick
+  mouseClick,
+  copyTargetText
 } from '../common'
 // 'use strict';
 // const VERSION = "1.2.9";
@@ -46,6 +47,7 @@ chrome.storage.sync.get(['configParams'], function (result) {
   }
   chrome.storage.sync.set(configParams, function () {});
   commonEvents(configParams)
+  copyTargetText()
   logInfo(result, configParams, 'storage-get');
 });
 
@@ -88,7 +90,7 @@ function removeErrListening(configParams) {
   // 错误监听
   const needRecord = (configParams.recordErrorList || []).some(it => host.includes(it))
   const script = document.querySelector('.yucheng-error-record')
-  if (!needRecord) {
+  if (!needRecord && script) {
     script.remove()
   }
   if (needRecord && !script) {
@@ -500,8 +502,8 @@ const list = {
     scroll: '.entry-list'
   },
   'lodash.com': {
-    // callback: lodash,
-    rehref: 'www.lodash.com'
+    callback: lodash,
+    // rehref: 'www.lodash.com'
   },
   'webpack.js.org': {
     // callback: webpack,
@@ -987,8 +989,9 @@ function lodash({
   href,
   win
 }) {
-  // const s = href.replace('lodash.com', 'www.lodashjs.com')
-  // location.href = s
+  if (host.includes('www.')) return
+  const s = href.replace('lodash.com', 'www.lodashjs.com')
+  location.href = s
 }
 
 function pornhub() {

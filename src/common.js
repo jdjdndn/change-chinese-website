@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-01 17:51:37
+ * @LastEditTime: 2022-01-06 22:25:19
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -78,4 +78,85 @@ export function mouseClick(configParams = configParamsDefault) {
     if (!configParams.debug) return false
     console.log(...msg);
   }
+}
+
+// ctrl+c 复制文本
+export function copyTargetText() {
+  const preList = [...document.querySelectorAll('pre')]
+  window.addEventListener('keyup', (e) => {
+    if (e.ctrlKey && e.keyCode === 67 && !window.getSelection().toString()) {
+      if (preList.length) {
+        const pre = preList.find(it => it.contains(target))
+        if (pre) {
+          clipboardWrite(pre.innerText)
+          return false
+        }
+      }
+      clipboardWrite(target.innerText)
+    }
+  })
+}
+
+function clipboardWrite(text) {
+  if (text) {
+    navigator.clipboard.writeText(text).then(function () {
+      /* clipboard successfully set */
+    }, function (err) {
+      /* clipboard write failed */
+    });
+  } else if (target.nodeName.toLowerCase() === 'img') {
+    copyImg()
+  } else if (target.nodeName.toLowerCase() === 'canvas') {
+    canvasCopy(target)
+  }
+}
+
+function rmDom(...args) {
+  args.forEach(it => it.remove())
+}
+
+function copyImg() {
+  const img = new Image();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const defaultWidth = 800
+  const ratio = target.width / target.height
+  const width = target.width >= defaultWidth ? target.width : defaultWidth
+  const height = width / ratio
+
+  canvas.width = width;
+  canvas.height = height;
+  // 宽高比
+
+  img.crossOrigin = "Anonymous";
+  img.src = target.src;
+
+  img.onload = () => {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.drawImage(img, 0, 0, width, height);
+    canvasCopy(canvas, true)
+  }
+}
+
+function canvasCopy(canvas, need = false) {
+  // 将canvas转为blob
+  canvas.toBlob(blob => {
+    const data = [
+      new ClipboardItem({
+        [blob.type]: blob,
+      }),
+    ];
+    navigator.clipboard.write(data)
+      .then(
+        () => {
+          if (need) rmDom(img, canvas);
+          console.log("Copied to clipboard successfully!");
+        },
+        () => {
+          if (need) rmDom(img, canvas);
+          console.error("Unable to write to clipboard.");
+        }
+      );
+  });
 }

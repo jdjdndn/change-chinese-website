@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-05 20:36:39
+ * @LastEditTime: 2022-01-06 19:38:50
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -45,10 +45,17 @@ function handlerRequest(details) {
       type: 'application/json'
     })
     blob.text().then(res => {
-      requestList.unshift({
-        url: details.url,
-        data: JSON.parse(res || '{}')
-      })
+      try {
+        requestList.unshift({
+          url: details.url,
+          data: JSON.parse(data || '{}')
+        })
+      } catch (error) {
+        requestList.unshift({
+          url: details.url,
+          data
+        })
+      }
       if (requestList.length > maxRecordIndex) {
         requestList = requestList.slice(maxRecordIndex)
       }
@@ -167,7 +174,6 @@ chrome.runtime.onMessage.addListener(function notify(
     console.log(newLinkObj, linkObj);
   } else {
     configParams = message
-    commonEvents(message)
   }
 });
 
@@ -175,13 +181,9 @@ chrome.runtime.onMessage.addListener(function notify(
 chrome.storage.sync.get(['configParams'], function (result) {
   console.log(result.configParams, 'result');
   configParams = result.configParams
-  commonEvents(configParams)
-})
-
-function commonEvents(configParams) {
   // 清理缓存
   clearCache(configParams)
-}
+})
 
 function clearCache(configParams) {
   const callback = function () {
