@@ -59,7 +59,7 @@ if (typeof chrome.app.isInstalled !== 'undefined') {
       ...request
     }
     commonEvents(configParams)
-    logInfo(request, configParams, '接收消息', configParams.mapInfo[host].videoPlayRate);
+    logInfo(request, configParams, '接收消息', (configParams.mapInfo[host] || {}).videoPlayRate);
     sendResponse({
       host,
       str: '我收到了你的情书， popup~'
