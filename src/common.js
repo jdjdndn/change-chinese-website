@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-06 23:34:21
+ * @LastEditTime: 2022-01-07 19:54:05
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -66,7 +66,7 @@ export function mouseClick(configParams = configParamsDefault) {
     const code = e.keyCode;
     // if (e.shiftKey && code === 32) {
     // if (e.altKey && code === 66) {
-    if (e.ctrlKey && code === 81) {
+    if (e.ctrlKey && code === 88 && !window.getSelection().toString()) {
       findParentClick(target)
     }
   }
@@ -84,15 +84,20 @@ export function mouseClick(configParams = configParamsDefault) {
 export function copyTargetText() {
   const preList = [...document.querySelectorAll('pre')]
   window.addEventListener('keyup', (e) => {
-    if (e.ctrlKey && e.keyCode === 67 && !window.getSelection().toString()) {
-      if (preList.length) {
-        const pre = preList.find(it => it.contains(target))
-        if (pre) {
-          clipboardWrite(pre.innerText)
-          return false
+    if (e.ctrlKey && e.keyCode === 67) {
+      const text = window.getSelection().toString()
+      if (text) {
+        clipboardWrite(text)
+      } else {
+        if (preList.length) {
+          const pre = preList.find(it => it.contains(target))
+          if (pre) {
+            clipboardWrite(pre.innerText)
+            return false
+          }
         }
+        clipboardWrite(target.innerText)
       }
-      clipboardWrite(target.innerText)
     }
   })
 }
