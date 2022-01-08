@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-06 19:38:50
+ * @LastEditTime: 2022-01-08 11:52:57
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -44,7 +44,7 @@ function handlerRequest(details) {
     const blob = new Blob([raw.bytes], {
       type: 'application/json'
     })
-    blob.text().then(res => {
+    blob.text().then(data => {
       try {
         requestList.unshift({
           url: details.url,
@@ -59,9 +59,9 @@ function handlerRequest(details) {
       if (requestList.length > maxRecordIndex) {
         requestList = requestList.slice(maxRecordIndex)
       }
-      // console.log(res, '这里', JSON.parse(res));
+      // console.log(data, '这里', JSON.parse(data));
       if (requestObj[details.url]) {
-        requestObj[details.url].push(JSON.parse(res))
+        requestObj[details.url].push(JSON.parse(data))
       } else {
         requestObj[details.url] = []
       }
