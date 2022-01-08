@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-08 18:19:14
+ * @LastEditTime: 2022-01-08 20:08:33
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -82,15 +82,26 @@ export function mouseClick(configParams = configParamsDefault) {
   window.removeEventListener('pointermove', pointermove)
   window.addEventListener("pointermove", pointermove);
 
-  function keydown(e) {
+  function keyup(e) {
     const code = e.keyCode;
     if (e.ctrlKey && code === 88 && !window.getSelection().toString()) {
       findParentClick(target)
     }
+    // 实现浏览器上一步下一步
+    if (37 == code && e.ctrlKey) {
+      //处理的部分
+      boxInfo('后推')
+      history.back()
+    }
+    if (39 == code && e.ctrlKey) {
+      //处理的部分
+      boxInfo('前进')
+      history.go(1)
+    }
   }
 
-  window.removeEventListener("keydown", keydown);
-  window.addEventListener("keydown", keydown);
+  window.removeEventListener("keyup", keyup);
+  window.addEventListener("keyup", keyup);
 
   function logInfo(...msg) {
     if (!configParams.debug) return false
