@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-07 19:54:05
+ * @LastEditTime: 2022-01-08 18:19:14
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -12,13 +12,31 @@ let target = null,
   configParamsDefault = {
     changeEleMiaoBian: false,
     debug: true
-  }
+  },
+  YUCHENG_USE_BOX = document.createElement('div'),
+  YUCHENG_TIMER = null,
+  YUCHENG_USE_DELAY = 1000,
+  {
+    log
+  } = console,
+  onerror = window.onerror,
+  MAX_RECORD_REQUEST_LIST = 200
+YUCHENG_USE_BOX.classList.add('yucheng-use-box')
+document.body.appendChild(YUCHENG_USE_BOX)
 
 function debounce(fn, delay = 16) {
   if (timer) {
     clearTimeout(timer);
   }
   timer = setTimeout(fn, delay);
+}
+
+function boxInfo(info) {
+  YUCHENG_USE_BOX.innerHTML = info
+  YUCHENG_USE_BOX.style.display = 'block'
+  setTimeout(() => {
+    YUCHENG_USE_BOX.style.display = 'none'
+  }, YUCHENG_USE_DELAY)
 }
 
 // shift + space 实现点击鼠标所在位置
@@ -32,11 +50,13 @@ export function mouseClick(configParams = configParamsDefault) {
       const listeners = getEventListeners(item)
       if (listeners && listeners.click) {
         item.click()
+        boxInfo('click s')
         return false
       }
     } else if ('click' in item) {
       // 拿不到监听的事件对象就看能否点击，能点击就点击
       item.click()
+      boxInfo('click s')
       return false
     }
     const parent = item.parentNode
@@ -56,7 +76,7 @@ export function mouseClick(configParams = configParamsDefault) {
         e.target.style.cssText += 'box-shadow: 0px 0px 1px 1px #ccc;'
       }
       if (!target || !target.nodeName || !target.classList || target.innerText === '') return false
-      logInfo(target.nodeName.toLowerCase(), target.classList, target.innerText.slice(0, 20), 'target');
+      logInfo(target.nodeName.toLowerCase(), target.classList, 'target');
     })
   }
   window.removeEventListener('pointermove', pointermove)
@@ -64,8 +84,6 @@ export function mouseClick(configParams = configParamsDefault) {
 
   function keydown(e) {
     const code = e.keyCode;
-    // if (e.shiftKey && code === 32) {
-    // if (e.altKey && code === 66) {
     if (e.ctrlKey && code === 88 && !window.getSelection().toString()) {
       findParentClick(target)
     }
@@ -76,7 +94,8 @@ export function mouseClick(configParams = configParamsDefault) {
 
   function logInfo(...msg) {
     if (!configParams.debug) return false
-    console.log(...msg);
+    // console.log(...msg);
+    boxInfo(...msg)
   }
 }
 
@@ -106,8 +125,10 @@ function clipboardWrite(text) {
   if (text) {
     navigator.clipboard.writeText(text).then(function () {
       /* clipboard successfully set */
+      boxInfo('copy s')
     }, function (err) {
       /* clipboard write failed */
+      boxInfo('copy e')
     });
   } else if (target.nodeName.toLowerCase() === 'img') {
     copyImg()
@@ -151,10 +172,10 @@ function canvasCopy(canvas, need = false) {
     navigator.clipboard.write(data)
       .then(
         () => {
-          console.log("Copied to clipboard successfully!");
+          boxInfo("copy s");
         },
         () => {
-          console.error("Unable to write to clipboard.");
+          boxInfo("copy e");
         }
       );
   });

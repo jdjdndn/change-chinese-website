@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-05 19:02:41
- * @LastEditTime: 2022-01-05 19:02:41
+ * @LastEditTime: 2022-01-08 12:22:43
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -15,6 +15,7 @@ let YUCHENG_ERROR_BOX = document.createElement('div'),
   MAX_RECORD_REQUEST_LIST = 200
 YUCHENG_ERROR_BOX.classList.add('yucheng-error-box')
 document.body.appendChild(YUCHENG_ERROR_BOX)
+
 let yuchengRequestList = []
 window.addEventListener('keyup', (e) => {
   if (e.keyCode === 13) {

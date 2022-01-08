@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-08 11:52:57
+ * @LastEditTime: 2022-01-08 12:13:53
  * @LastEditors: yucheng
  * @Description: ...
  */
@@ -37,6 +37,17 @@ let kIndex, linkObj = {},
   requestList = [], //请求参数列表
   maxRecordIndex = 200,
   configParams = {} // 配置参数对象
+
+function log(...msg) {
+  msg.forEach(it => {
+    if (typeof it === 'string') {
+      console.log('%c' + it, 'color:red;');
+    } else {
+      console.log(it);
+    }
+  })
+}
+log('background start');
 
 function handlerRequest(details) {
   // console.log(details, 'details')
@@ -179,7 +190,7 @@ chrome.runtime.onMessage.addListener(function notify(
 
 // 获取配置
 chrome.storage.sync.get(['configParams'], function (result) {
-  console.log(result.configParams, 'result');
+  log(result.configParams, 'result');
   configParams = result.configParams
   // 清理缓存
   clearCache(configParams)
@@ -187,7 +198,7 @@ chrome.storage.sync.get(['configParams'], function (result) {
 
 function clearCache(configParams) {
   const callback = function () {
-    console.log('Do something clever here once data has been removed', configParams.clearTime);
+    log('Do something clever here once data has been removed', configParams.clearTime);
   };
   if (!configParams.clearTime) return false
   const millisecondsPerWeek = 1000 * 60 * 60 * 24 * (configParams.clearTime || 1);

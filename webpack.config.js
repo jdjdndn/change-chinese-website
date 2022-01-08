@@ -110,6 +110,11 @@ function configFunc(env, argv) {
             from: "manifest.json",
             to: "manifest.json",
             flatten: true
+          },
+          {
+            from: "error-record.js",
+            to: "error-record.js",
+            flatten: true
           }
         ]
       }),
