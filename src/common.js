@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-08 20:08:33
+ * @LastEditTime: 2022-01-09 12:40:39
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -81,6 +81,11 @@ export function mouseClick(configParams = configParamsDefault) {
   }
   window.removeEventListener('pointermove', pointermove)
   window.addEventListener("pointermove", pointermove);
+
+  window.addEventListener("auxclick", (e) => {
+    findParentClick(target)
+    boxInfo('auxclick s')
+  });
 
   function keyup(e) {
     const code = e.keyCode;
