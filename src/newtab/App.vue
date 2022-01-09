@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-12-14 22:08:32
+ * @LastEditTime: 2022-01-09 19:10:37
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -11,12 +11,12 @@
     <div class="search-btn-list">
       <input
         ref="input"
-        type="search"
         v-model="value"
+        type="search"
         class="yucheng-search-input"
         @focus="searchInputFocus = true"
         @blur="searchInputFocus = false"
-      /><button @click="handleSearch" ref="search-btn">搜索</button><br />
+      /><button ref="search-btn" @click="handleSearch">搜索</button><br />
       google:<button
         v-for="(item, i) in searchBtnList"
         :key="i"
@@ -74,7 +74,7 @@
 
 <script>
 import config from './config';
-
+import { mouseClick, copyTargetText } from '../common';
 export default {
   data() {
     return {
@@ -182,6 +182,8 @@ export default {
     this.init();
   },
   mounted() {
+    mouseClick();
+    copyTargetText();
     window.addEventListener('keyup', this.keyup);
   },
   methods: {
