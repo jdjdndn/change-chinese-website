@@ -1,7 +1,7 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-09 12:40:39
+ * @LastEditTime: 2022-01-11 20:15:49
  * @LastEditors: yucheng
  * @Description: ..
  */
@@ -14,27 +14,34 @@ let target = null,
     debug: true
   },
   YUCHENG_USE_BOX = document.createElement('div'),
-  YUCHENG_TIMER = null,
   YUCHENG_USE_DELAY = 1000,
   {
     log
-  } = console,
-  onerror = window.onerror,
-  MAX_RECORD_REQUEST_LIST = 200
+  } = console
 YUCHENG_USE_BOX.classList.add('yucheng-use-box')
 document.body.appendChild(YUCHENG_USE_BOX)
 
-function debounce(fn, delay = 16) {
-  if (timer) {
-    clearTimeout(timer);
+// 工具类
+class Util {
+  constructor() {
+    this.timer = null;
   }
-  timer = setTimeout(fn, delay);
+  debounce(fn, delay = 16) {
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+    if (typeof fn !== 'function') {
+      return false
+    }
+    this.timer = setTimeout(fn, delay);
+  }
 }
 
-function boxInfo(info) {
+// noClose 为 false 时，不关闭
+export function boxInfo(info, noClose = true) {
   YUCHENG_USE_BOX.innerHTML = info
   YUCHENG_USE_BOX.style.display = 'block'
-  setTimeout(() => {
+  noClose && setTimeout(() => {
     YUCHENG_USE_BOX.style.display = 'none'
   }, YUCHENG_USE_DELAY)
 }
@@ -43,28 +50,29 @@ function boxInfo(info) {
 export function mouseClick(configParams = configParamsDefault) {
   // console.log(configParams, 'common.js------');
   // 从子孙往上找，直到找到可以点击的dom
-  function findParentClick(item) {
-    if (!item) return
+  function findParentClick(item, isClick = true) {
+    if (!item) return !isClick
     // 获取元素上的监听事件
     if (typeof getEventListeners === 'function') {
       const listeners = getEventListeners(item)
       if (listeners && listeners.click) {
         item.click()
         boxInfo('click s')
-        return false
+        return isClick
       }
     } else if ('click' in item) {
       // 拿不到监听的事件对象就看能否点击，能点击就点击
       item.click()
       boxInfo('click s')
-      return false
+      return isClick
     }
     const parent = item.parentNode
-    findParentClick(parent)
+    findParentClick(parent, isClick)
+    return !isClick
   }
 
   function pointermove(e) {
-    debounce(() => {
+    moveObj.debounce(() => {
       if (configParams.changeEleMiaoBian) {
         if (target) {
           target.style.cssText = targetCssText
@@ -79,28 +87,40 @@ export function mouseClick(configParams = configParamsDefault) {
       logInfo(target.nodeName.toLowerCase(), target.classList, 'target');
     })
   }
+
+  const moveObj = new Util()
   window.removeEventListener('pointermove', pointermove)
   window.addEventListener("pointermove", pointermove);
 
   window.addEventListener("auxclick", (e) => {
-    findParentClick(target)
-    boxInfo('auxclick s')
+    const flag = findParentClick(target)
+    if (flag) {
+      boxInfo('auxclick s')
+    } else {
+      boxInfo('auxclick e')
+    }
   });
 
   function keyup(e) {
     const code = e.keyCode;
+    if (e.keyCode === 13) {
+      YUCHENG_USE_BOX.style.display = 'none'
+    }
     if (e.ctrlKey && code === 88 && !window.getSelection().toString()) {
-      findParentClick(target)
-    }
-    // 实现浏览器上一步下一步
-    if (37 == code && e.ctrlKey) {
+      const flag = findParentClick(target)
+      if (flag) {
+        boxInfo('click s')
+      } else {
+        boxInfo('click e')
+      }
+    } else if (37 == code && e.ctrlKey) {
+      // 实现浏览器上一步下一步
       //处理的部分
-      boxInfo('后推')
+      boxInfo('back')
       history.back()
-    }
-    if (39 == code && e.ctrlKey) {
+    } else if (39 == code && e.ctrlKey) {
       //处理的部分
-      boxInfo('前进')
+      boxInfo('forward')
       history.go(1)
     }
   }
@@ -137,21 +157,36 @@ export function copyTargetText() {
   })
 }
 
-function clipboardWrite(text) {
+function clipboardWrite(text, needClear = false) {
   if (text) {
-    navigator.clipboard.writeText(text).then(function () {
-      /* clipboard successfully set */
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        /* clipboard successfully set */
+        boxInfo('copy s')
+        if (needClear) {
+          window.getSelection().removeAllRanges()
+        }
+      }, function (err) {
+        /* clipboard write failed */
+        boxInfo('copy e')
+        if (needClear) {
+          window.getSelection().removeAllRanges()
+        }
+      });
+    } else {
+      document.execCommand('copy')
       boxInfo('copy s')
-    }, function (err) {
-      /* clipboard write failed */
-      boxInfo('copy e')
-    });
-  } else if (target.nodeName.toLowerCase() === 'img') {
+      if (needClear) {
+        window.getSelection().removeAllRanges()
+      }
+    }
+  } else if (['img', 'video'].includes(target.nodeName.toLowerCase())) {
     copyImg()
   } else if (target.nodeName.toLowerCase() === 'canvas') {
     canvasCopy(target)
   }
 }
+
 
 function copyImg() {
   const img = new Image();
@@ -175,6 +210,10 @@ function copyImg() {
     ctx.drawImage(img, 0, 0, width, height);
     canvasCopy(canvas, true)
   }
+
+  img.onerror = () => {
+    boxInfo('cors e')
+  }
 }
 
 function canvasCopy(canvas, need = false) {
@@ -195,4 +234,15 @@ function canvasCopy(canvas, need = false) {
         }
       );
   });
+}
+
+// 选择的自动选中
+const selectObj = new Util()
+export function autoSelect() {
+  document && document.addEventListener('selectionchange', e => {
+    selectObj.debounce(() => {
+      if (!window.getSelection().toString()) return false
+      clipboardWrite(window.getSelection().toString(), true)
+    }, 1000)
+  })
 }

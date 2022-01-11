@@ -6,18 +6,17 @@
 import './index.scss'
 import {
   mouseClick,
-  copyTargetText
+  copyTargetText,
+  autoSelect,
+  boxInfo
 } from '../common'
 // 'use strict';
 // const VERSION = "1.2.9";
 let performance_now = performance.now(),
   liListStr = '', // 链接列表字符串
   linkObj = {},
-  rmad, // 链接对象 key是href
   timer = null,
   win = '',
-  target = null, // 将要点击的目标元素
-  targetCssText = '', // 将要点击目标元素的样式
   configParams = {} // popup配置参数
 
 const {
@@ -48,6 +47,7 @@ chrome.storage.sync.get(['configParams'], function (result) {
   chrome.storage.sync.set(configParams, function () {});
   commonEvents(configParams)
   copyTargetText()
+  autoSelect()
   logInfo(result, configParams, 'storage-get');
 });
 
@@ -1344,3 +1344,11 @@ function sendMessage(object = {}, i = 0) {
     sendMessage(object)
   }
 }
+
+window.addEventListener('blur', e => {
+  boxInfo('no focus', false)
+});
+
+window.addEventListener('focus', e => {
+  boxInfo('has focus')
+});
