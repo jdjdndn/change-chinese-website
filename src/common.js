@@ -1,11 +1,13 @@
 /*
  * @Author: yucheng
  * @Date: 2022-01-01 16:28:16
- * @LastEditTime: 2022-01-11 20:15:49
+ * @LastEditTime: 2022-01-14 21:46:54
  * @LastEditors: yucheng
  * @Description: ..
  */
-
+export const defaultparams = {
+  defaultVideoPlayRate: 1.5
+}
 let target = null,
   timer = null,
   targetCssText = null,

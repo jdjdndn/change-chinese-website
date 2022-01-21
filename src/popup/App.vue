@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2022-01-05 20:41:25
+ * @LastEditTime: 2022-01-14 21:49:02
  * @LastEditors: yucheng
  * @Description: ...
 -->
@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import { mouseClick } from '../common';
+import { mouseClick, defaultparams } from '../common';
 export default {
   data() {
     return {
@@ -100,7 +100,7 @@ export default {
       noChangeHrefList: ['iflytek', 'zhixue', 'localhost'], // 不跳转其他url列表
       debug: false, // 调试模式
       recordErrorList: ['localhost'], // 记录报错列表
-      videoPlayRate: 1.5 // 默认视频播放速度
+      videoPlayRate: defaultparams.defaultVideoPlayRate // 默认视频播放速度
     };
   },
   mounted() {

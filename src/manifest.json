@@ -12,7 +12,7 @@
   },
   "content_scripts": [
     {
-      "all_frames": false,
+      "all_frames": true,
       "js": [
         "./contentScripts.js"
       ],
@@ -25,7 +25,7 @@
     }
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-  "description": "vue-chrome-extension-boilerplate",
+  "description": "----",
   "devtools_page": "./devtools.html",
   "homepage_url": "https://www.baidu.com",
   "icons": {

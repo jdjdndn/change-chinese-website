@@ -1,7 +1,7 @@
 <!--
  * @Author: yucheng
  * @Date: 2021-08-31 08:23:13
- * @LastEditTime: 2021-08-31 08:48:04
+ * @LastEditTime: 2022-01-15 12:19:54
  * @LastEditors: yucheng
  * @Description: 。。。
 -->
@@ -13,12 +13,15 @@
 
 <script>
 export default {
-  data () {
+  data() {
     return {
       msg: 'Welcome!---devtools'
-    }
+    };
+  },
+  mounted() {
+    console.log(this, chrome, '------------');
   }
-}
+};
 </script>
 
 <style lang="stylus"></style>

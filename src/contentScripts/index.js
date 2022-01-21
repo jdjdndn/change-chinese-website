@@ -8,7 +8,8 @@ import {
   mouseClick,
   copyTargetText,
   autoSelect,
-  boxInfo
+  boxInfo,
+  defaultparams
 } from '../common'
 // 'use strict';
 // const VERSION = "1.2.9";
@@ -59,7 +60,7 @@ if (typeof chrome.app.isInstalled !== 'undefined') {
       ...request
     }
     commonEvents(configParams)
-    logInfo(request, configParams, '接收消息', (configParams.mapInfo[host] || {}).videoPlayRate);
+    logInfo(request, configParams, '接收消息', (configParams.mapInfo[host] || {}).videoPlayRate || defaultparams.defaultVideoPlayRate);
     sendResponse({
       host,
       str: '我收到了你的情书， popup~'
@@ -75,7 +76,7 @@ function commonEvents(configParams) {
   mouseClick(configParams)
   // 添加/移除错误监听
   removeErrListening(configParams)
-  videoPlay((configParams.mapInfo[host] || {}).videoPlayRate)
+  videoPlay((configParams.mapInfo[host] || {}).videoPlayRate || defaultparams.defaultVideoPlayRate)
 }
 
 function replaceHref(configParams) {
